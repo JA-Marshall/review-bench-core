@@ -42,7 +42,7 @@ def render(cases, rows, criteria):
     if pairs:
         lines += ["", "## Pairs", "",
                   "| Pair | Union recall | Intersection recall | Union false blocking / clean | Intersection false blocking / clean | Paired calls |",
-                  "| --- | --- | --- | --- | --- | --- | --- |"]
+                  "| --- | --- | --- | --- | --- | --- |"]
         for pair, m in pairs.items():
             lines.append(f"| {pair} | {fmt(m['union_recall'])} | {fmt(m['intersection_recall'])} | "
                          f"{fmt(m['union_false_blocking_per_clean_case'])} | "

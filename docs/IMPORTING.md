@@ -102,7 +102,7 @@ python -m review_bench --cases cases/pydantic misses --results results/pydantic-
 ```
 
 The rendered report for that run is in
-[pydantic-2026-09-30.md](results/pydantic-2026-09-30.md). Three inexpensive
+[pydantic-2026-09-30-notes.md](results/pydantic-2026-09-30-notes.md). Three inexpensive
 reviewers were chosen deliberately: the batch is meant to show the harness
 working end to end, not to rank frontier models.
 

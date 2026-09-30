@@ -5,6 +5,15 @@
   "Hashing is consistent with equality",
   "Comparing with an instance of another type returns False"
  ],
+ "adjudications": [
+  {
+   "by": "assistant draft (Claude), pending review by JA-Marshall",
+   "date": "2026-09-30",
+   "finding": "__eq__ uses isinstance(other, self.__class__), so SecretStr('x') == Subclass('x') is True but the reverse is False",
+   "note": "Raised as blocking by codex gpt-6-luna and claude-haiku-4-5. The asymmetry is real and would be a fair should_fix, but it produces no wrong record, crash or data loss in normal use, so blocking is not justified. The case keeps its single blocking expectation (the non-ASCII TypeError).",
+   "verdict": "false_positive"
+  }
+ ],
  "author": "history",
  "base_sha": "ec80ed3e1b941c1edabe7d9e5a2053a1b0580383",
  "expected": [

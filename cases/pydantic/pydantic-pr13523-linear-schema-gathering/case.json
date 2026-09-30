@@ -4,6 +4,15 @@
   "Definition reference counting keeps its per-encounter semantics",
   "Creating chains of interconnected models completes in linear time"
  ],
+ "adjudications": [
+  {
+   "by": "assistant draft (Claude), pending review by JA-Marshall",
+   "date": "2026-09-30",
+   "finding": "Repeated visits rescan a shared subtree's reference span, so traversal is O(k*m) rather than linear",
+   "note": "Raised as blocking by codex gpt-6-luna in one repeat. Even if the bound is looser than the PR claims, the output is unchanged and the change still removes the exponential behaviour; a complexity nuance is not a blocking defect.",
+   "verdict": "false_positive"
+  }
+ ],
  "author": "history",
  "base_sha": "b75fadbaa55d4d700a388f1b67683ef0be0ed540",
  "expected": [],
