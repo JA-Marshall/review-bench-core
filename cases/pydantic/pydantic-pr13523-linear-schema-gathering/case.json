@@ -1,0 +1,26 @@
+{
+ "acceptance": [
+  "Each schema object is visited once even when several paths reach it",
+  "Definition reference counting keeps its per-encounter semantics",
+  "Creating chains of interconnected models completes in linear time"
+ ],
+ "author": "history",
+ "base_sha": "b75fadbaa55d4d700a388f1b67683ef0be0ed540",
+ "expected": [],
+ "files": [
+  "pydantic/_internal/_schema_gather.py",
+  "tests/test_edge_cases.py"
+ ],
+ "id": "pydantic-pr13523-linear-schema-gathering",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Traverse each core schema object once in gather_schemas_for_cleaning(), so schema cleaning is linear in the number of schemas rather than exponential in the number of paths",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "c333d775d49cfa91ab2686d11f9002ea1933ec16",
+  "merge_style": "squash",
+  "merged_at": "2026-08-03T18:54:04Z",
+  "pr": 13523,
+  "url": "https://github.com/pydantic/pydantic/pull/13523"
+ }
+}

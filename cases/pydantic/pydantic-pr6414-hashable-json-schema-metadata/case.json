@@ -1,0 +1,42 @@
+{
+ "acceptance": [
+  "Annotated[int, WithJsonSchema(...)] inside a Union generates a JSON schema without a hashability error",
+  "Equal instances hash equal"
+ ],
+ "author": "history",
+ "base_sha": "5aa850687b969e7c0526f9ecedab94d88b3e1a07",
+ "expected": [
+  {
+   "description": "__hash__ returns hash(type(self.mode)), the hash of str or NoneType, so all instances with a string mode share one hash value; valid but degenerate.",
+   "file": "pydantic/json_schema.py",
+   "id": "hash-of-mode-type",
+   "keywords": [
+    "hash(type",
+    "type(self.mode)",
+    "self.mode",
+    "constant",
+    "same hash",
+    "collide",
+    "type rather than",
+    "hash the value"
+   ],
+   "severity": "should_fix"
+  }
+ ],
+ "files": [
+  "pydantic/json_schema.py",
+  "tests/test_json_schema.py"
+ ],
+ "id": "pydantic-pr6414-hashable-json-schema-metadata",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Make WithJsonSchema and Examples hashable so they can be used as Annotated metadata inside Union and Optional",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "b095cd4a9fa1d9ad8549580cd0b4ccd9d36e96ef",
+  "merge_style": "squash",
+  "merged_at": "2023-07-04T13:05:01Z",
+  "pr": 6414,
+  "url": "https://github.com/pydantic/pydantic/pull/6414"
+ }
+}

@@ -1,0 +1,25 @@
+diff --git a/pydantic/json_schema.py b/pydantic/json_schema.py
+index ebcd0f523..6fc639f1e 100644
+--- a/pydantic/json_schema.py
++++ b/pydantic/json_schema.py
+@@ -871,7 +871,7 @@ class GenerateJsonSchema:
+     def _common_temporal_schema(
+         self, format: str, temporal_format: Literal['iso8601', 'seconds', 'milliseconds']
+     ) -> JsonSchemaValue:
+-        if temporal_format != 'iso8601':
++        if self.mode == 'serialization' and temporal_format != 'iso8601':
+             # Both `'seconds'` and `'milliseconds'` serialize to a number:
+             return {'type': 'number'}
+         return {'type': 'string', 'format': format}
+diff --git a/tests/test_json_schema.py b/tests/test_json_schema.py
+index f75336318..4c439df2f 100644
+--- a/tests/test_json_schema.py
++++ b/tests/test_json_schema.py
+@@ -854,6 +854,7 @@ def test_date_types_ser_json_temporal(field_type, iso8601_format, ser_json_tempo
+         expected_schema = {'title': 'A', 'type': 'number'}
+ 
+     assert Model.model_json_schema(mode='serialization')['properties']['a'] == expected_schema
++    assert Model.model_json_schema(mode='validation')['properties']['a']['type'] == 'string'
+ 
+ 
+ @pytest.mark.parametrize('ser_json_temporal', ['iso8601', 'seconds', 'milliseconds'])

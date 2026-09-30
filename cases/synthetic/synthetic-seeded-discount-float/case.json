@@ -1,0 +1,39 @@
+{
+ "acceptance": [
+  "apply_discount rejects percentages outside 0 to 100",
+  "The result is quantised to two decimal places",
+  "Money stays Decimal throughout"
+ ],
+ "author": "synthetic",
+ "base_sha": "0ecca1382cd983e5a0605b62fda011726535c843",
+ "expected": [
+  {
+   "description": "The discount is computed in binary float and returned as float, so totals lose penny precision and no longer round half up.",
+   "file": "ledger/money.py",
+   "id": "float-money",
+   "keywords": [
+    "float",
+    "Decimal",
+    "rounding",
+    "precision",
+    "to_pennies",
+    "binary"
+   ],
+   "severity": "blocking"
+  }
+ ],
+ "files": [
+  "ledger/money.py",
+  "tests/test_money.py"
+ ],
+ "id": "synthetic-seeded-discount-float",
+ "kind": "seeded",
+ "notes": "Money maths silently switched from Decimal to float.",
+ "objective": "Apply a whole-number percentage discount to a line total, rounded to the penny",
+ "repo": "https://example.invalid/ledger",
+ "source": {
+  "clean_case": "synthetic-clean-discount",
+  "example_step": 1,
+  "merge": "e828f548bf351902ebe897ad2ec707b285334333"
+ }
+}

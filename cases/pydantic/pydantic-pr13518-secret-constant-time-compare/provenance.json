@@ -1,0 +1,116 @@
+{
+ "proposal": {
+  "base_sha": "ec80ed3e1b941c1edabe7d9e5a2053a1b0580383",
+  "base_verified": true,
+  "commits": 2,
+  "evidence": {
+   "discussion": [
+    {
+     "body": "## Deploying pydantic-docs with &nbsp;<a href=\"https://pages.dev\"><img alt=\"Cloudflare Pages\" src=\"https://user-images.githubusercontent.com/23264/106598434-9e719e00-654f-11eb-9e59-6167043cfa01.png\" width=\"16\"></a> &nbsp;Cloudflare Pages\n\n<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>ae9ad4a</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;\u2705&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://73e3cff2.pydantic-docs.pages.dev'>https://73e3cff2.pydantic-docs.pages.dev</a>\n</td></tr>\n<tr><td><strong>Branch Preview URL [...]",
+     "created_at": "2026-07-27T10:06:15Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13518#issuecomment-5089997292"
+    },
+    {
+     "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **not alter performance**\n\n\n`\u2705 215` untouched benchmarks  \n\n\n\n\n\n---\n\n<sub>Comparing <code>vp/secret-constant-time</code> (ae9ad4a) with <code>main</code> (a187a65)</sub>\n\n<a href=\"https://app.codspeed.io/pydantic/pydantic/branches/vp%2Fsecret-constant-time?utm_source=github&utm_medium=comment-v2&utm_content=button\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://codspeed.io/pr-report/open-in-codspeed-dark.svg\">\n    <source media=\"(prefers-color-scheme: light)\" srcset=\"https://codspeed.io/pr-r [...]",
+     "created_at": "2026-07-27T10:14:35Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13518#issuecomment-5090077572"
+    },
+    {
+     "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.99%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\" [...]",
+     "created_at": "2026-07-27T11:52:46Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13518#issuecomment-5090942328"
+    }
+   ],
+   "later_references": [
+    {
+     "body": "## Change Summary\n\n#13518 changed `SecretStr.__eq__()` to use `secrets.compare_digest()`, which only supports ASCII when given `str` arguments. Comparing two `SecretStr` instances holding non-ASCII values now raises a `TypeError`:\n\n```python\nfrom pydantic import SecretStr\n\nSecretStr('caf\u00e9') == SecretStr('caf\u00e9')\n#> TypeError: comparing strings with non-ASCII characters is not supported\n```\n\nEncoding the secret values to bytes before the comparison keeps the constant-time property and restores equality for any string value. `SecretBytes` is unaffected, as `secrets.compare_digest()` accepts arbit [...]",
+     "kind": "pull_request",
+     "number": 13537,
+     "referenced_at": "2026-07-29T12:26:26Z",
+     "state": "closed",
+     "title": "Fix `SecretStr` equality comparison raising `TypeError` on non-ASCII values",
+     "url": "https://github.com/pydantic/pydantic/pull/13537"
+    }
+   ],
+   "linked_issues": [
+    {
+     "body": "Implemented what we discussed in #120\n\nAlso changed pytest execution in the Makefile (was failing in my machine).",
+     "created_at": "2018-02-02T11:39:52Z",
+     "number": 123,
+     "title": "Subclass abcmeta",
+     "url": "https://github.com/pydantic/pydantic/pull/123"
+    }
+   ],
+   "review_comments": [
+    {
+     "body": "```suggestion\n    is that you can define a custom `_display()` method, which will be used for [`repr()`][repr] and [`str()`][str] methods. The examples below demonstrate both\n```",
+     "line": 1587,
+     "path": "pydantic/types.py",
+     "url": "https://github.com/pydantic/pydantic/pull/13518#discussion_r3657590262"
+    }
+   ],
+   "reviews": [
+    {
+     "body": "",
+     "state": "APPROVED",
+     "submitted_at": "2026-07-29T09:25:34Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13518#pullrequestreview-4806331885"
+    }
+   ]
+  },
+  "excluded_files": [],
+  "files": [
+   "pydantic/types.py"
+  ],
+  "has_tests": false,
+  "merge_sha": "d0ffa0951e47fd7349032e4b2ea9a54dc28fd435",
+  "merge_style": "squash",
+  "merged_at": "2026-07-29T09:25:43Z",
+  "packet": {
+   "acceptance_draft": [],
+   "body_excerpt": "<!-- Thank you for your contribution! -->\n<!-- Unless your change is trivial, please create an issue to discuss the change before creating a PR -->\n\n## Change Summary\n\nReplaces https://github.com/pydantic/pydantic/pull/13497.\n\n<!-- Please give a short summary of the changes. -->\n\n## Related issue number\n\n<!-- WARNING: please use \"fix #123\" style references so the issue is closed when this PR is merged. -->\n\n## Checklist\n\n* [ ] The pull request title is a good summary of the changes - it will be used in the changelog\n* [ ] Unit tests for the changes exist\n* [ ] Tests pass on CI\n* [ ] Documentation reflects the changes where applicable\n* [ ] My PR is ready to review, **please add a comment including the phrase \"please review\" to assign reviewers**",
+   "objective": "Use constant-time comparison for `SecretStr` and `SecretBytes` types"
+  },
+  "pr": 13518,
+  "repo": "https://github.com/pydantic/pydantic",
+  "schema": 1,
+  "title": "Use constant-time comparison for `SecretStr` and `SecretBytes` types",
+  "urls": {
+   "base_commit": "https://github.com/pydantic/pydantic/commit/ec80ed3e1b941c1edabe7d9e5a2053a1b0580383",
+   "compare": "https://github.com/pydantic/pydantic/compare/ec80ed3e1b941c1edabe7d9e5a2053a1b0580383...d0ffa0951e47fd7349032e4b2ea9a54dc28fd435",
+   "merge_commit": "https://github.com/pydantic/pydantic/commit/d0ffa0951e47fd7349032e4b2ea9a54dc28fd435",
+   "pr": "https://github.com/pydantic/pydantic/pull/13518"
+  }
+ },
+ "ruling": {
+  "acceptance": [
+   "SecretStr and SecretBytes instances compare equal exactly when their secret values are equal",
+   "Equality uses a constant-time comparison",
+   "Hashing is consistent with equality",
+   "Comparing with an instance of another type returns False"
+  ],
+  "case_id": "pydantic-pr13518-secret-constant-time-compare",
+  "expected": [
+   {
+    "description": "secrets.compare_digest() only accepts ASCII when given str arguments, so comparing two SecretStr values that contain non-ASCII characters raises TypeError instead of returning a bool.",
+    "file": "pydantic/types.py",
+    "id": "compare-digest-non-ascii",
+    "keywords": [
+     "compare_digest",
+     "non-ASCII",
+     "ASCII",
+     "TypeError",
+     "encode",
+     "unicode",
+     "bytes"
+    ],
+    "severity": "blocking"
+   }
+  ],
+  "objective": "Compare SecretStr and SecretBytes values in constant time and make both types hashable",
+  "rationale": "PR #13537, merged the same day, encodes both values to bytes before secrets.compare_digest() because the str form raises TypeError on non-ASCII input; its author says the regression was found while reading this commit. The defect is on lines this diff adds in pydantic/types.py.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "seeded"
+ }
+}

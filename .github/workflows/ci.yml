@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests (fixture repository, null and oracle backends; no model, no network)
+        run: python -m unittest discover -s tests -v
+      - name: Example pipeline end to end
+        run: |
+          python -m review_bench --cases /tmp/example-cases example --target /tmp/example-target --build-cases
+          python -m review_bench --cases /tmp/example-cases check --repo /tmp/example-target
+          python -m review_bench --cases /tmp/example-cases run --repo /tmp/example-target \
+            --backend oracle --backend null --results /tmp/example-results/r.jsonl --repeats 2 --work /tmp/example-work
+          grep -q "| oracle | PASS |" /tmp/example-results/r.md
+      - name: Shipped cases validate and apply
+        run: |
+          python -m review_bench --cases cases/synthetic check --repo /tmp/example-target
+          python - <<'EOF'
+          from review_bench.cases import load_cases
+          from review_bench.importer import leak_check
+          cases = load_cases("cases/pydantic")
+          leaks = [leak for c in cases for leak in leak_check(c["directory"])]
+          assert not leaks, leaks
+          print(f"{len(cases)} pydantic cases, no packet leaks")
+          EOF

@@ -1,0 +1,111 @@
+diff --git a/pydantic-core/src/validators/model_fields.rs b/pydantic-core/src/validators/model_fields.rs
+index 5e8fe0349..913d51292 100644
+--- a/pydantic-core/src/validators/model_fields.rs
++++ b/pydantic-core/src/validators/model_fields.rs
+@@ -179,7 +179,6 @@ impl Validator for ModelFieldsValidator {
+             };
+             self.validate_by_get_item(py, input, dict, state)?
+         };
+-        state.add_fields_set(fields_set.len());
+ 
+         // if we have extra=allow, but we didn't create a dict because we were validating
+         // from attributes, set it now so __pydantic_extra__ is always a dict if extra=allow
+@@ -560,6 +559,7 @@ impl ModelFieldsValidator {
+             (0..self.fields.len()).map(|_| None).collect();
+         let mut errors: Vec<ValLineError> = Vec::new();
+         let fields_set = PySet::empty(py)?;
++        let mut fields_set_count: usize = 0;
+ 
+         let state = &mut state.scoped_set_data(Some(model_dict.clone()));
+         let state = &mut state.scoped_clear_field_error();
+@@ -636,6 +636,7 @@ impl ModelFieldsValidator {
+                 match field.validator.validate(py, field_json_value, state) {
+                     Ok(value) => {
+                         fields_set.add(&field.name)?;
++                        fields_set_count += 1;
+                         value
+                     }
+                     Err(ValError::Omit) => continue,
+@@ -697,6 +698,7 @@ impl ModelFieldsValidator {
+             return Err(ValError::LineErrors(errors));
+         }
+ 
++        state.add_fields_set(fields_set_count);
+         Ok((model_dict, model_extra_dict_op, fields_set))
+     }
+ }
+diff --git a/tests/types/unions/test_union.py b/tests/types/unions/test_union.py
+index b68d9cf19..f7a3f60f2 100644
+--- a/tests/types/unions/test_union.py
++++ b/tests/types/unions/test_union.py
+@@ -1,6 +1,6 @@
+ from abc import ABC, abstractmethod
+ from enum import IntEnum
+-from typing import Annotated, ClassVar, Literal
++from typing import Annotated, Any, ClassVar, Literal
+ from uuid import UUID
+ 
+ import pytest
+@@ -14,6 +14,7 @@ from pydantic import (
+     Strict,
+     TypeAdapter,
+     ValidationError,
++    model_validator,
+ )
+ 
+ 
+@@ -235,6 +236,54 @@ def test_union_typeddict():
+     assert ta.validate_python(dict(foo='baz')) == {'foo': 'baz'}
+ 
+ 
++@pytest.mark.parametrize('extra', ['ignore', 'allow'])
++@pytest.mark.parametrize('reverse_members', [False, True])
++def test_smart_union_fields_set_count_consistent_between_json_and_python(
++    extra: Literal['ignore', 'allow'], reverse_members: bool
++) -> None:
++    """https://github.com/pydantic/pydantic/issues/13729"""
++
++    class Smaller(BaseModel):
++        model_config = ConfigDict(extra=extra)
++
++        a: int
++        b: int
++
++        @model_validator(mode='before')
++        @classmethod
++        def keep_input(cls, value: Any) -> Any:
++            return value
++
++    class Larger(BaseModel):
++        a: int
++        b: int
++        c: int
++
++    ta = TypeAdapter(Larger | Smaller if reverse_members else Smaller | Larger)
++
++    assert isinstance(ta.validate_python({'a': 1, 'b': 2, 'c': 3}), Larger)
++    assert isinstance(ta.validate_json('{"a": 1, "b": 2, "c": 3}'), Larger)
++
++
++@pytest.mark.parametrize('reverse_members', [False, True])
++def test_smart_union_fields_set_count_ignores_extra(reverse_members: bool) -> None:
++    """https://github.com/pydantic/pydantic/issues/13729"""
++
++    class WithExtra(BaseModel):
++        model_config = ConfigDict(extra='allow')
++
++        a: int
++
++    class Explicit(BaseModel):
++        a: int
++        b: int
++
++    ta = TypeAdapter(Explicit | WithExtra if reverse_members else WithExtra | Explicit)
++
++    assert isinstance(ta.validate_python({'a': 1, 'b': 2}), Explicit)
++    assert isinstance(ta.validate_json('{"a": 1, "b": 2}'), Explicit)
++
++
+ def test_union_respects_local_strict() -> None:
+     class MyBaseModel(BaseModel):
+         model_config = ConfigDict(strict=True)

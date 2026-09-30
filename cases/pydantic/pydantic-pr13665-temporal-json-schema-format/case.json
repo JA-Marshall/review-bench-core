@@ -1,0 +1,44 @@
+{
+ "acceptance": [
+  "With ser_json_temporal set to seconds or milliseconds, temporal fields are described as numbers in the serialization JSON schema",
+  "With iso8601 or no setting, the string schemas and their formats are unchanged",
+  "ser_json_temporal takes precedence over ser_json_timedelta for timedelta fields; existing ser_json_timedelta behaviour is otherwise unchanged"
+ ],
+ "author": "history",
+ "base_sha": "9a8429701a327cb1218517cc43b2c01606938c2f",
+ "expected": [
+  {
+   "description": "_common_temporal_schema applies the serialization format regardless of the JSON schema mode, so a validation-mode schema says a datetime field is a number while the validator accepts and expects ISO 8601 strings.",
+   "file": "pydantic/json_schema.py",
+   "id": "validation-schema-uses-serialization-format",
+   "keywords": [
+    "validation schema",
+    "validation mode",
+    "mode=",
+    "both modes",
+    "regardless of mode",
+    "ISO 8601",
+    "accepts strings",
+    "still accepts",
+    "'number'"
+   ],
+   "severity": "blocking"
+  }
+ ],
+ "files": [
+  "pydantic/json_schema.py",
+  "tests/test_json_schema.py"
+ ],
+ "id": "pydantic-pr13665-temporal-json-schema-format",
+ "kind": "seeded",
+ "notes": "Ruled seeded by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Make the JSON Schema for date, time, datetime and timedelta fields reflect the ser_json_temporal setting, so serialization schemas match model_dump_json() output",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "6d03f94f7b470729822ce8c88f88cba0c411833a",
+  "merge_style": "squash",
+  "merged_at": "2026-08-17T02:21:31Z",
+  "pr": 13665,
+  "url": "https://github.com/pydantic/pydantic/pull/13665"
+ }
+}

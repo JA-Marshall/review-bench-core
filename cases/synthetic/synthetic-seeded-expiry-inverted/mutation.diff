@@ -1,0 +1,10 @@
+diff --git a/ledger/tokens.py b/ledger/tokens.py
+index 712fa63..fa26474 100644
+--- a/ledger/tokens.py
++++ b/ledger/tokens.py
+@@ -14,4 +14,4 @@ def is_valid(token, now):
+     """A token is usable strictly before its expiry instant."""
+     if token.issued_at > now:
+         return False
+-    return token.expires_at > now
++    return token.expires_at < now

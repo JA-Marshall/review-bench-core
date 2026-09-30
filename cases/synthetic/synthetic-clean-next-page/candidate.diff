@@ -1,0 +1,29 @@
+diff --git a/ledger/paging.py b/ledger/paging.py
+index f8e9864..f55030c 100644
+--- a/ledger/paging.py
++++ b/ledger/paging.py
+@@ -2,6 +2,9 @@
+ 
+ 
+ def page(items, offset, limit):
++    """Return (items on this page, whether another page follows)."""
+     if offset < 0 or limit <= 0:
+         raise ValueError("offset must be >= 0 and limit > 0")
+-    return list(items[offset:offset + limit])
++    window = list(items[offset:offset + limit])
++    has_next = offset + limit < len(items)
++    return window, has_next
+diff --git a/tests/test_paging.py b/tests/test_paging.py
+index 2452db1..a8ae90a 100644
+--- a/tests/test_paging.py
++++ b/tests/test_paging.py
+@@ -2,4 +2,8 @@ from ledger.paging import page
+ 
+ 
+ def test_page_slices():
+-    assert page([1, 2, 3, 4, 5], 2, 2) == [3, 4]
++    assert page([1, 2, 3, 4, 5], 2, 2) == ([3, 4], True)
++
++
++def test_last_page_has_no_next():
++    assert page([1, 2, 3, 4], 2, 2) == ([3, 4], False)

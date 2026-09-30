@@ -1,0 +1,47 @@
+{
+ "acceptance": [
+  "Every type the removed TYPES lists matched produces the same core schema as before",
+  "Bare and subscripted forms of each collection type dispatch to the handler they used before",
+  "Types not in the tables still reach the existing fallback paths"
+ ],
+ "author": "history",
+ "base_sha": "79e15fab237a2fbf6a2cd2e5db984b503269940c",
+ "expected": [
+  {
+   "description": "Bare collections.abc.MutableSequence used to be in LIST_TYPES and validate as a list; the new table maps it to _sequence_schema(Any), so a str passes validation unchanged and nothing is coerced to a list.",
+   "file": "pydantic/_internal/_generate_schema.py",
+   "id": "mutable-sequence-dispatch",
+   "keywords": [
+    "MutableSequence",
+    "_sequence_schema",
+    "_list_schema",
+    "LIST_TYPES",
+    "is_instance",
+    "coercion",
+    "bare",
+    "mutability"
+   ],
+   "severity": "blocking"
+  }
+ ],
+ "files": [
+  "pydantic/_internal/_generate_schema.py",
+  "pydantic/_internal/_typing_extra.py",
+  "pyproject.toml",
+  "tests/test_docs.py",
+  "tests/test_typing.py",
+  "uv.lock"
+ ],
+ "id": "pydantic-pr13573-type-lookup-dispatch-table",
+ "kind": "seeded",
+ "notes": "Ruled seeded by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Replace the sequential type-list checks in core schema generation with dictionary dispatch on the bare type or origin, as an optimisation with no change in the schemas produced",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "b75fadbaa55d4d700a388f1b67683ef0be0ed540",
+  "merge_style": "squash",
+  "merged_at": "2026-08-03T18:37:04Z",
+  "pr": 13573,
+  "url": "https://github.com/pydantic/pydantic/pull/13573"
+ }
+}

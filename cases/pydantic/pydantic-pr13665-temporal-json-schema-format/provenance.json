@@ -1,0 +1,111 @@
+{
+ "proposal": {
+  "base_sha": "9a8429701a327cb1218517cc43b2c01606938c2f",
+  "base_verified": true,
+  "commits": 4,
+  "evidence": {
+   "discussion": [
+    {
+     "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **not alter performance**\n\n\n`\u2705 216` untouched benchmarks  \n`\u23e9 163` skipped benchmarks[^skipped]  \n\n\n\n\n\n---\n\n<sub>Comparing <code>shashiKundur1:fix-temporal-json-schema</code> (c1d7051) with <code>main</code> (9a84297)</sub>\n\n<a href=\"https://app.codspeed.io/pydantic/pydantic/branches/shashiKundur1%3Afix-temporal-json-schema?utm_source=github&utm_medium=comment-v2&utm_content=button\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://codspeed.io/pr-report/open-in-codspeed-dark.svg\">\n    <source m [...]",
+     "created_at": "2026-08-16T16:55:15Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13665#issuecomment-5308562179"
+    },
+    {
+     "body": "please review\n\n@Viicos this one lands in your area of the codebase. Short version: `ser_json_temporal` never made it into `GenerateJsonSchema`, so a serialization schema advertises `type: string` while `model_dump_json()` writes a number, and `timedelta_schema` still resolves off `ser_json_timedelta` alone, which makes it wrong in the opposite direction when both settings are present. Full write up with a runnable repro is in #13664.\n\nOne note on the red CodSpeed check, since it looks alarming and I am fairly confident it is not real. The two flagged benchmarks are `test_list_of_strs_json_unca [...]",
+     "created_at": "2026-08-16T17:00:17Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13665#issuecomment-5308583010"
+    },
+    {
+     "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.9%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\"6 [...]",
+     "created_at": "2026-08-16T17:02:03Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13665#issuecomment-5308590517"
+    },
+    {
+     "body": "Thanks for the nits and for the assignment.\n\nQuick note on the red `check`, in case it saves you looking into it. The only failing job is `Test windows-latest / pypy3.11`, and it looks like a flake rather than anything in the diff. Your two commits produced two merge commits with an identical tree, and that same job passed on `e946c4c` and then crashed on `6006be0` four minutes later. The failure is `make: *** [Makefile:75: test] Error -1073740791`, which is `0xC0000409`, a stack buffer overrun, so the interpreter died rather than any test failing. Nothing was reported as failed before it went [...]",
+     "created_at": "2026-08-17T01:31:53Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13665#issuecomment-5310799929"
+    }
+   ],
+   "later_references": [
+    {
+     "body": "## Change Summary\n\n`ser_json_temporal` and `ser_json_timedelta` only change what is *emitted*. Validation keeps accepting ISO 8601 strings whatever they are set to. But `_common_temporal_schema` consults them in both modes, so a validation JSON schema built under `ser_json_temporal='seconds'` declares `{'type': 'number'}` for a `datetime` \u2014 describing input the model would take *and* forbidding input it actually accepts.\n\nOn `main`:\n\n```python\nfrom datetime import datetime\n\nfrom pydantic import BaseModel, ConfigDict\n\nclass Model(BaseModel):\n    model_config = ConfigDict(ser_json_temporal='seco [...]",
+     "kind": "pull_request",
+     "number": 13711,
+     "referenced_at": "2026-08-26T03:32:12Z",
+     "state": "closed",
+     "title": "Don't apply serialization temporal formats to validation JSON schemas",
+     "url": "https://github.com/pydantic/pydantic/pull/13711"
+    }
+   ],
+   "linked_issues": [
+    {
+     "body": "### Initial Checks\n\n- [X] I confirm that I'm using Pydantic V2\n\n### Description\n\n`ser_json_temporal` landed in v2.12 and controls how `datetime`, `date`, `time` and `timedelta` are serialized to JSON. `GenerateJsonSchema` was never told about it, so a `mode='serialization'` schema still says these fields are strings even when `model_dump_json()` writes numbers.\n\nWith `ser_json_temporal='seconds'` (same with `'milliseconds'`), every temporal field is affected:\n\n```\nschema:  {'dt': {'type': 'string', 'format': 'date-time'}, 'td': {'type': 'string', 'format': 'duration'}}\ndump:    {'dt': 1577836800.0, 'td': 86400.0}\n```\n\nRunning that payload through a JSON Schema validator fails with `1577836800.0 is not of type 'string'`, so the schema pydantic publishes rejects the output pydantic itself just produced. `date_schema`, `time_schema` and `datetime_schema` read no config at all right now.\n\nThere is a second mismatch that goes the other way, on `timedelta`. `timedelta_schema` only looks at the older `ser_json_timedelta` setting. The docs for `ser_json_temporal` say it takes precedence over `ser_json_timedelta`, and pydantic-core implements exactly that: `SerializationConfig::from_config` and `TimeDeltaSerializer::build` both check whether `ser_json_temporal` is present in the config before falling back to `ser_json_timedelta`. The JSON schema layer does not, so setting `ser_json_temporal='iso8601'` together with `ser_json_timedelta='float'` gives you the reverse problem:\n\n```\nschem [...]",
+     "created_at": "2026-08-16T16:43:24Z",
+     "number": 13664,
+     "title": "JSON Schema ignores `ser_json_temporal`, so serialization schemas contradict `model_dump_json()` output",
+     "url": "https://github.com/pydantic/pydantic/issues/13664"
+    }
+   ],
+   "review_comments": [],
+   "reviews": []
+  },
+  "excluded_files": [],
+  "files": [
+   "pydantic/json_schema.py",
+   "tests/test_json_schema.py"
+  ],
+  "has_tests": true,
+  "merge_sha": "6d03f94f7b470729822ce8c88f88cba0c411833a",
+  "merge_style": "squash",
+  "merged_at": "2026-08-17T02:21:31Z",
+  "packet": {
+   "acceptance_draft": [
+    "Existing `ser_json_timedelta` behaviour is unchanged. When `ser_json_temporal` is absent from the config the old branch is taken, so `ser_json_timedelta='float'` still gives `{'type': 'number'}` exactly as before."
+   ],
+   "body_excerpt": "## Change Summary\n\n`ser_json_temporal` was added in v2.12 but `GenerateJsonSchema` was never taught about it, so a `mode='serialization'` schema describes `datetime`, `date`, `time` and `timedelta` as strings even when `model_dump_json()` writes numbers. The published schema then rejects the payload pydantic itself just produced.\n\n`date_schema`, `time_schema` and `datetime_schema` read no config at all today, and `timedelta_schema` reads only the superseded `ser_json_timedelta`. That second one is wrong in both directions, because `ser_json_temporal` is documented to take precedence and pydantic-core implements that precedence by checking whether the key is present in the config before falling back:\n\n```rust\n// serializers/config.rs, and the same shape again in type_serializers/timedelta.rs\nlet temporal_set = config\n    .and_then(|cfg| cfg.contains(intern!(cfg.py(), \"ser_json_temporal\")).ok())\n    .unwrap_or(false);\nlet temporal_mode = if temporal_set {\n    TemporalMode::from_config(config)?\n} else {\n    TimedeltaMode::from_config(config)?.into()\n};\n```\n\nThis mirrors that resolution in the four temporal schema methods and routes them through a small `_common_temporal_schema` helper, in the same way `set_schema`/`frozenset_schema` share `_common_set_schema`. `'seconds'` and `'milliseconds'` both serialize to a number, so both map to `{'type': 'number'}`.\n\nBefore and after, with `ser_json_temporal='seconds'`:\n\n```python\nclass Model(BaseModel):\n    model_config = ConfigDict(ser_ [...]",
+   "objective": "Take `ser_json_temporal` into account when generating JSON Schema"
+  },
+  "pr": 13665,
+  "repo": "https://github.com/pydantic/pydantic",
+  "schema": 1,
+  "title": "Take `ser_json_temporal` into account when generating JSON Schema",
+  "urls": {
+   "base_commit": "https://github.com/pydantic/pydantic/commit/9a8429701a327cb1218517cc43b2c01606938c2f",
+   "compare": "https://github.com/pydantic/pydantic/compare/9a8429701a327cb1218517cc43b2c01606938c2f...6d03f94f7b470729822ce8c88f88cba0c411833a",
+   "merge_commit": "https://github.com/pydantic/pydantic/commit/6d03f94f7b470729822ce8c88f88cba0c411833a",
+   "pr": "https://github.com/pydantic/pydantic/pull/13665"
+  }
+ },
+ "ruling": {
+  "acceptance": [
+   "With ser_json_temporal set to seconds or milliseconds, temporal fields are described as numbers in the serialization JSON schema",
+   "With iso8601 or no setting, the string schemas and their formats are unchanged",
+   "ser_json_temporal takes precedence over ser_json_timedelta for timedelta fields; existing ser_json_timedelta behaviour is otherwise unchanged"
+  ],
+  "case_id": "pydantic-pr13665-temporal-json-schema-format",
+  "expected": [
+   {
+    "description": "_common_temporal_schema applies the serialization format regardless of the JSON schema mode, so a validation-mode schema says a datetime field is a number while the validator accepts and expects ISO 8601 strings.",
+    "file": "pydantic/json_schema.py",
+    "id": "validation-schema-uses-serialization-format",
+    "keywords": [
+     "validation schema",
+     "validation mode",
+     "mode=",
+     "both modes",
+     "regardless of mode",
+     "ISO 8601",
+     "accepts strings",
+     "still accepts",
+     "'number'"
+    ],
+    "severity": "blocking"
+   }
+  ],
+  "objective": "Make the JSON Schema for date, time, datetime and timedelta fields reflect the ser_json_temporal setting, so serialization schemas match model_dump_json() output",
+  "rationale": "The linked issue #13664 asked for serialization schemas to match model_dump_json() output. PR #13711, merged nine days later as an unreleased regression fix, limits the change to serialization mode: _common_temporal_schema() as added here consults the serialization format in both modes, so a validation-mode schema declares a datetime as a number while validation still accepts ISO 8601 strings.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "seeded"
+ }
+}

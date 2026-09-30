@@ -1,0 +1,219 @@
+{
+ "base_sha": "de6528bee52f54e287808adb0cae13c070f658e8",
+ "base_verified": true,
+ "commits": 9,
+ "evidence": {
+  "discussion": [
+   {
+    "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.46%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\" [...]",
+    "created_at": "2025-05-16T14:10:04Z",
+    "url": "https://github.com/pydantic/pydantic/pull/11883#issuecomment-2886835705"
+   },
+   {
+    "body": "> * Should we create a new core schema for the `UNSET` sentinel?\n\nI could imagine users might want custom sentinels too, should there be a generic \"sentinel\" schema?",
+    "created_at": "2025-05-17T10:29:00Z",
+    "url": "https://github.com/pydantic/pydantic/pull/11883#issuecomment-2888280561"
+   },
+   {
+    "body": "## Deploying pydantic-docs with &nbsp;<a href=\"https://pages.dev\"><img alt=\"Cloudflare Pages\" src=\"https://user-images.githubusercontent.com/23264/106598434-9e719e00-654f-11eb-9e59-6167043cfa01.png\" width=\"16\"></a> &nbsp;Cloudflare Pages\n\n<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>9ed9218</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;\u2705&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://b51576eb.pydantic-docs.pages.dev'>https://b51576eb.pydantic-docs.pages.dev</a>\n</td></tr>\n<tr><td><strong>Branch Preview URL [...]",
+    "created_at": "2025-07-01T14:59:54Z",
+    "url": "https://github.com/pydantic/pydantic/pull/11883#issuecomment-3024415799"
+   },
+   {
+    "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n<!-- __CODSPEED_INSTRUMENTATION_PERFORMANCE_REPORT_COMMENT__ -->\n\n## [CodSpeed Performance Report](https://codspeed.io/pydantic/pydantic/branches/unset-sentinel)\n\n### Merging #11883 will **not alter performance**\n\n<sub>Comparing <code>unset-sentinel</code> (9ed9218) with <code>main</code> (de6528b)</sub>\n\n\n\n### Summary\n\n`\u2705 46` untouched benchmarks",
+    "created_at": "2025-07-25T21:57:03Z",
+    "url": "https://github.com/pydantic/pydantic/pull/11883#issuecomment-3120489600"
+   },
+   {
+    "body": "Thank you @Viicos!",
+    "created_at": "2026-02-01T02:28:26Z",
+    "url": "https://github.com/pydantic/pydantic/pull/11883#issuecomment-3830116333"
+   }
+  ],
+  "later_references": [
+   {
+    "body": "### Initial Checks\n\n- [X] I have searched Google & GitHub for similar requests and couldn't find anything\n- [X] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nInstead of maintaining a `__fields_set__` on each model instance, pydantic could provide an `Unset` type.\n\nWhile being a major breaking change, it would lead to the following improvements for users:\n\n1. Simplify checking whether a field is `None` or unset\n2. Simplify marking a field as unset in an existing model instance\n3. Make type annotations for not-`None` but  [...]",
+    "kind": "issue",
+    "number": 5326,
+    "referenced_at": "2025-07-26T12:05:37Z",
+    "state": "closed",
+    "title": "Replace `__fields_set__` with an `Unset` type",
+    "url": "https://github.com/pydantic/pydantic/issues/5326"
+   },
+   {
+    "body": "### Initial Checks\n\n- [x] I have searched Google & GitHub for similar requests and couldn't find anything\n- [x] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\n\n## \ud83d\ude80 Feature Request:  Support `NotRequired` Field Semantics in Pydantic Models\n\n### Background\n\nIn many real-world API contracts, some request fields are:\n\n- Optional to include (i.e., the client may omit them entirely),\n- But if provided, **must be a valid non-null value**,\n- And **`null` is not a valid input** (and often not semantically meaningful),\n- Meanwhil [...]",
+    "kind": "issue",
+    "number": 11705,
+    "referenced_at": "2025-07-26T12:07:04Z",
+    "state": "closed",
+    "title": "\ud83d\ude80 Feature Request:  Support `NotRequired` Field Semantics in Pydantic Models",
+    "url": "https://github.com/pydantic/pydantic/issues/11705"
+   },
+   {
+    "body": "For use in PATCH methods and such.\n\nSomething along the lines of:\n\n```python\nfrom typing import Annotated, Any, TypeVar\nfrom typing import Annotated, Any\nfrom pydantic import BaseModel, WrapValidator, WrapSerializer, WithJsonSchema\nfrom pydantic_core import PydanticOmit\nfrom pydantic_core.core_schema import SerializerFunctionWrapHandler, ValidatorFunctionWrapHandler\n\ndef _ser_missing(v: Any, handler: SerializerFunctionWrapHandler) -&gt; Any:\n    if v is Missing:\n        raise PydanticOmit\n    return handler(v)\n\ndef _val_missing(v: Any, handler: ValidatorFunctionWrapHandler) -> Any:\n    if v is [...]",
+    "kind": "issue",
+    "number": 6928,
+    "referenced_at": "2025-07-26T12:08:19Z",
+    "state": "closed",
+    "title": "Support for partial models via a Missing type",
+    "url": "https://github.com/pydantic/pydantic/issues/6928"
+   },
+   {
+    "body": "### Initial Checks\n\n- [X] I have searched Google & GitHub for similar requests and couldn't find anything\n- [X] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nIf you are familiar with `TypedDict`, you will know about the type hints `typing.Required` and `typing.NotRequired` introduced by [PEP-665](https://peps.python.org/pep-0655/), mainly targeting for usage on `TypedDict`.\n\nI know that since pydantic V2, the [nullable / optional / required field declaration](https://docs.pydantic.dev/latest/migration/#required-optional [...]",
+    "kind": "issue",
+    "number": 7712,
+    "referenced_at": "2025-07-26T12:09:35Z",
+    "state": "closed",
+    "title": "Support type hints `Required`, `NotRequired`",
+    "url": "https://github.com/pydantic/pydantic/issues/7712"
+   },
+   {
+    "body": "### Initial Checks\n\n- [x] I have searched Google & GitHub for similar requests and couldn't find anything\n- [X] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nI am using Pydantic 2.6.4 to generate JSON schemas for web forms, using React as the front-end framework. I would like to write a field in a Pydantic model that has no default value but is not included in the \"required\" list in the translated JSON schema.  \n\nConsider the following schema:\n\n```json\n{\n  \"title\": \"Cell\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name [...]",
+    "kind": "issue",
+    "number": 9057,
+    "referenced_at": "2025-07-26T12:11:21Z",
+    "state": "closed",
+    "title": "Pydantic to JSON Schema translation: Write a field with no default value that is not required in the JSON schema",
+    "url": "https://github.com/pydantic/pydantic/issues/9057"
+   },
+   {
+    "body": "### Initial Checks\n\n- [x] I have searched Google & GitHub for similar requests and couldn't find anything\n- [x] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nUse-case:\nI have a 'missing' sentinel value. When the field is set to this sentinel I want it to be excluded from the model serialization.\n\nThis discussion is relevant: https://github.com/pydantic/pydantic/discussions/9943#discussioncomment-10131374 \n\nThis is different from `Field(exclude=true)` as that's on a per field level. I could do it on a per model basis by  [...]",
+    "kind": "issue",
+    "number": 11843,
+    "referenced_at": "2025-07-26T12:12:23Z",
+    "state": "closed",
+    "title": "Add ability to exclude a type from serialization.",
+    "url": "https://github.com/pydantic/pydantic/issues/11843"
+   },
+   {
+    "body": "### Initial Checks\n\n- [X] I have searched Google & GitHub for similar requests and couldn't find anything\n- [X] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nI am using pydantic directly to write json to kafka, or via FastAPI to expose API responses. In both scenario, a good practice we where doing so far in my company with pydantic v1, was, when a property was optional, to omit it totally if it was not \"present\" (saving network/storage spaces)\n\nWith pydantic v2, it is not possible anymore easily. From the migration gui [...]",
+    "kind": "issue",
+    "number": 8394,
+    "referenced_at": "2025-07-26T12:19:10Z",
+    "state": "closed",
+    "title": "Allow optional properties to be truely optional",
+    "url": "https://github.com/pydantic/pydantic/issues/8394"
+   },
+   {
+    "body": "### Initial Checks\n\n- [X] I confirm that I'm using Pydantic V2\n\n### Description\n\nJSON Schema Draft 2020-12 explains the way to display optional (nullable) values.\n\nhttps://json-schema.org/draft/2020-12/json-schema-core.html#section-7.6.1-3\n\nExample:\n\n```\n{\n    \"type\": [\"string\", \"null\"],\n    \"maxLength\": 255\n}\n```\n\nBut pydantic v2 displays it like:\n\n```\n{\n    \"anyOf\": [\n        {\n            \"type\": \"string\"\n        },\n        {\n            \"type\": \"null\"\n        }\n    ],\n}\n```\n\nThe variant with `anyOf` displays strange in ReDoc For example\n![image](https://github.com/pydantic/pydantic/assets/ [...]",
+    "kind": "issue",
+    "number": 7161,
+    "referenced_at": "2025-07-26T12:21:15Z",
+    "state": "open",
+    "title": "JSON Schema for optional fields is incorrect.",
+    "url": "https://github.com/pydantic/pydantic/issues/7161"
+   },
+   {
+    "body": "I've been putting some work into typeshed pull requests and I've noticed some places where I could really have used a Proxy Generic class - meaning I can inherit from Proxy[T] and that means that whatever attributes T has, Proxy[T] also has. We don't want to directly mark this as inheritance since then the distinction of a proxy is lost.\n\nThe examples I ran into are ProxyType and CallableProxyType in weakref or SynchronizedBase in multiprocessing,csharedtypes.\nA big one would be unittest.Mock (See https://github.com/python/mypy/issues/1188).\nI'm sure other cases exist,\n\nAdvantages:\n - Represen [...]",
+    "kind": "issue",
+    "number": 802,
+    "referenced_at": "2025-07-31T13:34:56Z",
+    "state": "open",
+    "title": "Wrapper/Proxy Generic Type",
+    "url": "https://github.com/python/typing/issues/802"
+   }
+  ],
+  "linked_issues": [
+   {
+    "body": "### Initial Checks\n\n- [X] I have searched Google & GitHub for similar requests and couldn't find anything\n- [X] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nInstead of maintaining a `__fields_set__` on each model instance, pydantic could provide an `Unset` type.\n\nWhile being a major breaking change, it would lead to the following improvements for users:\n\n1. Simplify checking whether a field is `None` or unset\n2. Simplify marking a field as unset in an existing model instance\n3. Make type annotations for not-`None` but not required values pass mypy checks\n\nExample:\n\n```py\nclass ModelClass(BaseModel):\n    not_required_but_nullable: int | None = None\n    not_required_not_nullable: int = None  # mypy rejects this (point 3)\n\ninst = ModelClass(not_required_but_nullable=None)\n# Check whether field is set to None\ninst.not_required_but_nullable is None and \"not_required_but_nullable\" in inst.__fields_set__\n# Check whether field is unset\n\"not_required_but_nullable\" not in inst.__fields_set__\n# Unset field\ninst.not_required_but_nullable = None\ninst.__fields_set__.remove(\"not_required_but_nullable\")\n```\n\nWith an `Unset` type, this would become:\n\n```py\nclass ModelClass(BaseModel):\n    not_required_but_nullable: int | None | Unset = Unset\n    not_required_not_nullable: int | Unset = Unset\n\ninst = ModelClass(not_required_but_nullable=None)\n# Check whether field is set to None\ninst.not_required_but_nullable is None\n# [...]",
+    "created_at": "2023-03-31T14:40:38Z",
+    "number": 5326,
+    "title": "Replace `__fields_set__` with an `Unset` type",
+    "url": "https://github.com/pydantic/pydantic/issues/5326"
+   },
+   {
+    "body": "For use in PATCH methods and such.\n\nSomething along the lines of:\n\n```python\nfrom typing import Annotated, Any, TypeVar\nfrom typing import Annotated, Any\nfrom pydantic import BaseModel, WrapValidator, WrapSerializer, WithJsonSchema\nfrom pydantic_core import PydanticOmit\nfrom pydantic_core.core_schema import SerializerFunctionWrapHandler, ValidatorFunctionWrapHandler\n\ndef _ser_missing(v: Any, handler: SerializerFunctionWrapHandler) -&gt; Any:\n    if v is Missing:\n        raise PydanticOmit\n    return handler(v)\n\ndef _val_missing(v: Any, handler: ValidatorFunctionWrapHandler) -> Any:\n    if v is Missing:\n        return v\n    return handler(v)\n\nT = TypeVar('T')\n\nMaybeMissing = Annotated[T, WrapValidator(_val_missing), WrapSerializer(_ser_missing), WithJsonSchema({'type': []})]\n\nMissing: MaybeMissing[Any] = object()  # type: ignore\n\n\nclass Model(BaseModel):\n    y: int\n    x: MaybeMissing[int] = Missing\n\nprint(Model.model_json_schema())\nprint(Model(y=1).model_dump())\nprint(Model(y=1, x=2).model_dump())\n```\n\nThe main thing missing for this is support for `PydanticOmit` in serializer.\n\nNeeds some thinking around if it should be a type alias for None or a new type and other details.\n\nSelected Assignee: @dmontagu",
+    "created_at": "2023-07-28T10:39:07Z",
+    "number": 6928,
+    "title": "Support for partial models via a Missing type",
+    "url": "https://github.com/pydantic/pydantic/issues/6928"
+   },
+   {
+    "body": "### Initial Checks\n\n- [X] I have searched Google & GitHub for similar requests and couldn't find anything\n- [X] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nIf you are familiar with `TypedDict`, you will know about the type hints `typing.Required` and `typing.NotRequired` introduced by [PEP-665](https://peps.python.org/pep-0655/), mainly targeting for usage on `TypedDict`.\n\nI know that since pydantic V2, the [nullable / optional / required field declaration](https://docs.pydantic.dev/latest/migration/#required-optional-and-nullable-fields)  has been sorted out, and as long as we adhere to the way declared in the doc page, we are good to go. But not every dev on my codebase will have time / mindset to read through it, and make sure their declaration is as intended. However, a type hint like `Required / NotRequired` will be make that much more explicit.\n\nA change introduced by this will be minimal: For as any field declared as `NotRequired`, the field validator simply has to define a `None` as default, if no default is given. But it will makes the field specified in a code base dealing with dozens of model schemas much easier to read and being understood. \n\n### Affected Components\n\n- [ ] [Compatibility between releases](https://docs.pydantic.dev/changelog/)\n- [X] [Data validation/parsing](https://docs.pydantic.dev/concepts/models/#basic-model-usage)\n- [ ] [Data serialization](https://docs.pydantic.dev/c [...]",
+    "created_at": "2023-09-30T17:53:06Z",
+    "number": 7712,
+    "title": "Support type hints `Required`, `NotRequired`",
+    "url": "https://github.com/pydantic/pydantic/issues/7712"
+   },
+   {
+    "body": "### Initial Checks\n\n- [X] I have searched Google & GitHub for similar requests and couldn't find anything\n- [X] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nI am using pydantic directly to write json to kafka, or via FastAPI to expose API responses. In both scenario, a good practice we where doing so far in my company with pydantic v1, was, when a property was optional, to omit it totally if it was not \"present\" (saving network/storage spaces)\n\nWith pydantic v2, it is not possible anymore easily. From the migration guide table [here](https://docs.pydantic.dev/2.0/migration/#required-optional-and-nullable-fields) it is missing a \"Not required, cannot be None, no default\"\n\nAlso, the generated json schema are declaring they might return \"null\", when we actually don't want to do so\n\nWith the current set of feature, we have various options : \n* set `exclude_none` to `True` every time we dump an object (it could be quite a lot)\n* define a BaseModel overriding few methods (below what we currently have, might contain bugs)\n* having default, but then excluding them with `exclude_defaults` (but it has a lot of downsides)\n\nIn my opinion, for a non required field, the approach of:\n* omitting the property in json dump if None\n* having a simpler json schema\n\nshould be the default, or at least, Pydantic should expose a config to have this behavior\n\nIt is some kind of common practice to do such schema https://json-sc [...]",
+    "created_at": "2023-12-18T08:54:50Z",
+    "number": 8394,
+    "title": "Allow optional properties to be truely optional",
+    "url": "https://github.com/pydantic/pydantic/issues/8394"
+   },
+   {
+    "body": "### Initial Checks\n\n- [x] I have searched Google & GitHub for similar requests and couldn't find anything\n- [X] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nI am using Pydantic 2.6.4 to generate JSON schemas for web forms, using React as the front-end framework. I would like to write a field in a Pydantic model that has no default value but is not included in the \"required\" list in the translated JSON schema.  \n\nConsider the following schema:\n\n```json\n{\n  \"title\": \"Cell\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\"\n    },\n    \"type\": {\n      \"type\": \"string\"\n    },\n    \"organism\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\"name\", \"type\"]\n}\n```\nThe property \"organism\" has no default value, and is not \"required\". It seems impossible to write a Pydantic model that will translate to the above schema. If you have no default value in Pydantic, it will be required in JSON and vice versa. Translating the above schema to Pydantic using datamodel-code-generator gives:\n\n```python\nclass Cell(BaseModel):\n    name: str\n    type: str\n    organism: Optional[str] = None\n```\n\nBut if I were to have written that in Pydantic originally, that is translated by Pydantic into JSON schema as:\n\n```json\n\"organism\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"default\": null,\n      \"title\": \"Organism\"\n```\n\nUs [...]",
+    "created_at": "2024-03-19T21:39:43Z",
+    "number": 9057,
+    "title": "Pydantic to JSON Schema translation: Write a field with no default value that is not required in the JSON schema",
+    "url": "https://github.com/pydantic/pydantic/issues/9057"
+   },
+   {
+    "body": "### Initial Checks\n\n- [x] I have searched Google & GitHub for similar requests and couldn't find anything\n- [x] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\n\n## \ud83d\ude80 Feature Request:  Support `NotRequired` Field Semantics in Pydantic Models\n\n### Background\n\nIn many real-world API contracts, some request fields are:\n\n- Optional to include (i.e., the client may omit them entirely),\n- But if provided, **must be a valid non-null value**,\n- And **`null` is not a valid input** (and often not semantically meaningful),\n- Meanwhile, default values might exist on either client or server side,\n- And sometimes you *want* to keep Pydantic\u2019s default values for internal logic, while only omitting them from serialized outputs under certain rules.\n\nCurrently, Pydantic does not provide a clean, expressive way to represent this intent.\n\n---\n\n### \ud83d\udd0d Motivation\n\nConsider the following server-side API contract:\n\n```json\nPOST /predict\n{\n  \"model\": \"gpt-4\",\n  \"temperature\": 0.7   // optional, but if provided must be a float between 0 and 1\n}\n```\n\nThe rules are:\n\n1. The `temperature` field is optional \u2014 if omitted, the server uses its own default.\n2. If provided, it **must be a float**, and **must not be `null`**.\n3. The client should be able to omit it without sending a dummy value like `0.0`.\n\n---\n\n### \ud83e\uddea Existing Workarounds (and Their Issues)\n\n#### 1. `temperature: float | None = None`\n\n```python\nclass Request(BaseModel):\n     [...]",
+    "created_at": "2025-04-07T06:07:20Z",
+    "number": 11705,
+    "title": "\ud83d\ude80 Feature Request:  Support `NotRequired` Field Semantics in Pydantic Models",
+    "url": "https://github.com/pydantic/pydantic/issues/11705"
+   },
+   {
+    "body": "### Initial Checks\n\n- [x] I have searched Google & GitHub for similar requests and couldn't find anything\n- [x] I have read and followed [the docs](https://docs.pydantic.dev) and still think this feature is missing\n\n### Description\n\nUse-case:\nI have a 'missing' sentinel value. When the field is set to this sentinel I want it to be excluded from the model serialization.\n\nThis discussion is relevant: https://github.com/pydantic/pydantic/discussions/9943#discussioncomment-10131374 \n\nThis is different from `Field(exclude=true)` as that's on a per field level. I could do it on a per model basis by having a custom wrap serializer, but that requires that every model that uses the sentinel must also support this custom serializer. \n\nI'd propose adding a `core_schema.exclude_ser_schema()` and an `ExcludeSerialization` annotation.\n```python\n@classmethod\ndef __get_pydantic_core_schema__(cls, source_type: Any, _: GetCoreSchemaHandler) -> core_schema.CoreSchema:\n    return core_schema.is_instance_schema(\n        cls=source_type,\n        serialization=core_schema.exclude_ser_schema(),\n    )\n```\n\nAnd \n```python\nclass MyModel(BaseModel):\n    nullable_field: str | None | ExcludeSerialization[MissingSentinel] = MISSING\n```\n\n\nCalling `model_dump(exclude_unset=True)` comes very close in the desired behaviour but I'd like to keep other defaults. \nFor example, I want this:\n```python\nclass MyModel(BaseModel):\n    nullable_field: str | None | ExcludeSerialization[MissingSentinel] = MISSING\n    some_ [...]",
+    "created_at": "2025-05-04T16:00:55Z",
+    "number": 11843,
+    "title": "Add ability to exclude a type from serialization.",
+    "url": "https://github.com/pydantic/pydantic/issues/11843"
+   }
+  ],
+  "review_comments": [],
+  "reviews": [
+   {
+    "body": "",
+    "state": "APPROVED",
+    "submitted_at": "2025-07-25T22:00:00Z",
+    "url": "https://github.com/pydantic/pydantic/pull/11883#pullrequestreview-3056878701"
+   }
+  ]
+ },
+ "excluded_files": [],
+ "files": [
+  "docs/concepts/experimental.md",
+  "docs/errors/validation_errors.md",
+  "pydantic/_internal/_generate_schema.py",
+  "pydantic/experimental/missing_sentinel.py",
+  "pydantic/fields.py",
+  "pydantic/json_schema.py",
+  "pydantic/version.py",
+  "pyproject.toml",
+  "tests/test_missing_sentinel.py",
+  "uv.lock"
+ ],
+ "has_tests": true,
+ "merge_sha": "7c40924a3093a3f95847fdbd3df5b76a56db3b2d",
+ "merge_style": "squash",
+ "merged_at": "2025-07-26T11:53:26Z",
+ "packet": {
+  "acceptance_draft": [
+   "Sentinel location: currently defined in `pydantic-core`, but we need to expose it from the `experimental` module as we rely on the draft [PEP 661](https://peps.python.org/pep-0661/).",
+   "~~Should we create a new core schema for the `UNSET` sentinel? I'm currently using a `'literal'` schema, but not ideal for a couple reasons:~~",
+   "~~The core validator uses equality to validate literal values, but sentinels should be compared using identity.~~"
+  ],
+  "body_excerpt": "<!-- Thank you for your contribution! -->\n<!-- Unless your change is trivial, please create an issue to discuss the change before creating a PR -->\n\n## Change Summary\n\nRequires https://github.com/pydantic/pydantic-core/pull/1711.\n\nFixes https://github.com/pydantic/pydantic/issues/5326.\nFixes https://github.com/pydantic/pydantic/issues/6928.\nFixes https://github.com/pydantic/pydantic/issues/7712.\nFixes https://github.com/pydantic/pydantic/issues/8394.\nFixes https://github.com/pydantic/pydantic/issues/9057.\nFixes https://github.com/pydantic/pydantic/issues/11705.\nFixes https://github.com/pydantic/pydantic/issues/11843.\n\nExample:\n\n```python\nfrom pydantic import BaseModel\nfrom pydantic.experimental.missing_sentinel import MISSING\n\n\nclass A(BaseModel):\n    a: int | MISSING = MISSING\n\na1 = A()\na1.model_dump()\n#> {}\n\na2 = A(a=1)\na2.model_dump()\n#> {'a': 1}\n\nA.model_json_schema()\n#> {'properties': {'a': {'title': 'A', 'type': 'integer'}}, 'title': 'A', 'type': 'object'}\n\nclass B(BaseModel):\n    a: MISSING = MISSING\n\n\nB.model_json_schema()\n#> {'properties': {}, 'title': 'B', 'type': 'object'}\n```\n\nThings to consider:\n- ~~Sentinel name: `UNSET` seems to be the best fit (and [matches `msgspec`](https://jcristharif.com/msgspec/api.html#msgspec.UNSET)), but will be confusing as we already have a concept of unset fields (tracked in `__pydantic_fields_set__`). These unset fields can already be excluded by specifying `exclude_unset=True` during serialization. If users explicitly set `exclude [...]",
+  "objective": "Add experimental `MISSING` sentinel"
+ },
+ "pr": 11883,
+ "repo": "https://github.com/pydantic/pydantic",
+ "ruling": {
+  "rationale": "PR #12522 later special-cased MISSING in smart_deepcopy() because deep-copying the sentinel raised TypeError during model_construct(). The sentinel class lives in pydantic-core and smart_deepcopy() is not in this diff, so the defect cannot be attributed to a file a reviewer of this change would name. The diff is also 540 lines of docs and lockfile churn around the feature.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "rejected"
+ },
+ "schema": 1,
+ "title": "Add experimental `MISSING` sentinel",
+ "urls": {
+  "base_commit": "https://github.com/pydantic/pydantic/commit/de6528bee52f54e287808adb0cae13c070f658e8",
+  "compare": "https://github.com/pydantic/pydantic/compare/de6528bee52f54e287808adb0cae13c070f658e8...7c40924a3093a3f95847fdbd3df5b76a56db3b2d",
+  "merge_commit": "https://github.com/pydantic/pydantic/commit/7c40924a3093a3f95847fdbd3df5b76a56db3b2d",
+  "pr": "https://github.com/pydantic/pydantic/pull/11883"
+ }
+}

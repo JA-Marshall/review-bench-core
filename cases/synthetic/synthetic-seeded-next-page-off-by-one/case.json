@@ -1,0 +1,39 @@
+{
+ "acceptance": [
+  "page returns the window and a has_next flag",
+  "has_next is False on the final page"
+ ],
+ "author": "synthetic",
+ "base_sha": "e828f548bf351902ebe897ad2ec707b285334333",
+ "expected": [
+  {
+   "description": "When the window ends exactly at the end of the sequence has_next is True, so callers request an empty page.",
+   "file": "ledger/paging.py",
+   "id": "has-next-off-by-one",
+   "keywords": [
+    "has_next",
+    "<=",
+    "off-by-one",
+    "last page",
+    "empty page",
+    "one more page",
+    "exactly"
+   ],
+   "severity": "blocking"
+  }
+ ],
+ "files": [
+  "ledger/paging.py",
+  "tests/test_paging.py"
+ ],
+ "id": "synthetic-seeded-next-page-off-by-one",
+ "kind": "seeded",
+ "notes": "Boundary comparison flipped from < to <=.",
+ "objective": "Return whether another page follows the requested page",
+ "repo": "https://example.invalid/ledger",
+ "source": {
+  "clean_case": "synthetic-clean-next-page",
+  "example_step": 2,
+  "merge": "1926a8a67f7105a450542fbf0bee1be734cc2152"
+ }
+}

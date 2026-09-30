@@ -1,0 +1,39 @@
+{
+ "acceptance": [
+  "is_valid returns False once now reaches expires_at",
+  "Tokens issued in the future are invalid"
+ ],
+ "author": "synthetic",
+ "base_sha": "1926a8a67f7105a450542fbf0bee1be734cc2152",
+ "expected": [
+  {
+   "description": "The expiry comparison is reversed: expired tokens are accepted and live tokens rejected.",
+   "file": "ledger/tokens.py",
+   "id": "expiry-inverted",
+   "keywords": [
+    "expires_at",
+    "inverted",
+    "reversed",
+    "expired",
+    "accepts",
+    "rejects valid",
+    "<"
+   ],
+   "severity": "blocking"
+  }
+ ],
+ "files": [
+  "ledger/tokens.py",
+  "tests/test_tokens.py"
+ ],
+ "id": "synthetic-seeded-expiry-inverted",
+ "kind": "seeded",
+ "notes": "Comparison direction inverted.",
+ "objective": "Reject tokens at or after their expiry instant and before issue",
+ "repo": "https://example.invalid/ledger",
+ "source": {
+  "clean_case": "synthetic-clean-token-expiry",
+  "example_step": 3,
+  "merge": "6217dccd8b0183b5777de8decef0ef4977ddc726"
+ }
+}

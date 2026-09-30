@@ -1,0 +1,42 @@
+{
+ "acceptance": [
+  "SecretStr and SecretBytes instances compare equal exactly when their secret values are equal",
+  "Equality uses a constant-time comparison",
+  "Hashing is consistent with equality",
+  "Comparing with an instance of another type returns False"
+ ],
+ "author": "history",
+ "base_sha": "ec80ed3e1b941c1edabe7d9e5a2053a1b0580383",
+ "expected": [
+  {
+   "description": "secrets.compare_digest() only accepts ASCII when given str arguments, so comparing two SecretStr values that contain non-ASCII characters raises TypeError instead of returning a bool.",
+   "file": "pydantic/types.py",
+   "id": "compare-digest-non-ascii",
+   "keywords": [
+    "compare_digest",
+    "non-ASCII",
+    "ASCII",
+    "TypeError",
+    "encode",
+    "unicode",
+    "bytes"
+   ],
+   "severity": "blocking"
+  }
+ ],
+ "files": [
+  "pydantic/types.py"
+ ],
+ "id": "pydantic-pr13518-secret-constant-time-compare",
+ "kind": "seeded",
+ "notes": "Ruled seeded by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Compare SecretStr and SecretBytes values in constant time and make both types hashable",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "d0ffa0951e47fd7349032e4b2ea9a54dc28fd435",
+  "merge_style": "squash",
+  "merged_at": "2026-07-29T09:25:43Z",
+  "pr": 13518,
+  "url": "https://github.com/pydantic/pydantic/pull/13518"
+ }
+}

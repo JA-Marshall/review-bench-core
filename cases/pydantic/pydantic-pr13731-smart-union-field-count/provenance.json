@@ -1,0 +1,95 @@
+{
+ "proposal": {
+  "base_sha": "965c23dd93bd5ca7b86224ba39ccbe79399f117b",
+  "base_verified": true,
+  "commits": 3,
+  "evidence": {
+   "discussion": [
+    {
+     "body": "@tamird You do not have permission to open a PR without being assigned to the referenced issue (#13729).",
+     "created_at": "2026-08-28T01:13:15Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13731#issuecomment-5447141302"
+    },
+    {
+     "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.9%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\">\n\n_This PR does not seem to contain any modification to coverable code._\n\n<!-- This comment was produced by python-coverage-comment-action -->",
+     "created_at": "2026-08-28T01:20:41Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13731#issuecomment-5447192937"
+    },
+    {
+     "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **not alter performance**\n\n\n`\u2705 216` untouched benchmarks  \n`\u23e9 163` skipped benchmarks[^skipped]  \n\n\n\n\n\n---\n\n<sub>Comparing <code>tamird:tamird/fix-smart-union-field-count</code> (e6bc0fe) with <code>main</code> (965c23d)</sub>\n\n<a href=\"https://app.codspeed.io/pydantic/pydantic/branches/tamird%3Atamird%2Ffix-smart-union-field-count?utm_source=github&utm_medium=comment-v2&utm_content=button\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://codspeed.io/pr-report/open-in-codspeed-dark.svg\">\n    < [...]",
+     "created_at": "2026-08-28T01:23:20Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13731#issuecomment-5447212239"
+    }
+   ],
+   "later_references": [],
+   "linked_issues": [
+    {
+     "body": "### Initial Checks\n\n- [x] I confirm that I'm using Pydantic V2\n\n### Description\n\nAdding a no-op `mode='before'` model validator makes smart-union validation select a model with fewer matching fields for JSON input. The equivalent Python input selects the model with more matching fields.\n\nThe example below prints:\n\n```text\nLarger\nSmaller\n```\n\nI expect `Larger` in both cases: it has three supplied valid fields, while `Smaller` has two. This follows the documented [number-of-valid-fields-set ranking](https://docs.pydantic.dev/latest/concepts/unions/#number-of-valid-fields-set).\n\nReproduced on `main` at 965c23dd93bd5ca7b86224ba39ccbe79399f117b. In [model_fields.rs](https://github.com/pydantic/pydantic/blob/965c23dd93bd5ca7b86224ba39ccbe79399f117b/pydantic-core/src/validators/model_fields.rs), the Python-input helper adds its known-field count, then the outer validator adds `fields_set.len()` again. The before validator sends the smaller model through that Python-input path, while the larger model uses the plain JSON path and receives only the outer count.\n\nI can send a focused fix with regression tests. Could you assign this to me?\n\n### Example Code\n\n```python\nfrom typing import Any\n\nfrom pydantic import BaseModel, TypeAdapter, model_validator\n\n\nclass Smaller(BaseModel):\n    a: int\n    b: int\n\n    @model_validator(mode='before')\n    @classmethod\n    def keep_input(cls, value: Any) -> Any:\n        return value\n\n\nclass Larger(BaseModel):\n    a: int\n    b: int\n    c: int\n\n\nadapter = [...]",
+     "created_at": "2026-08-28T00:39:04Z",
+     "number": 13729,
+     "title": "Smart union selects the wrong model in JSON mode with a before validator",
+     "url": "https://github.com/pydantic/pydantic/issues/13729"
+    }
+   ],
+   "review_comments": [
+    {
+     "body": "```suggestion\nfrom ..conftest import plain_repr\n```",
+     "line": 13,
+     "path": "pydantic-core/tests/validators/test_union.py",
+     "url": "https://github.com/pydantic/pydantic/pull/13731#discussion_r3878888905"
+    },
+    {
+     "body": "```suggestion\n```",
+     "line": 896,
+     "path": "pydantic-core/tests/validators/test_union.py",
+     "url": "https://github.com/pydantic/pydantic/pull/13731#discussion_r3878890386"
+    }
+   ],
+   "reviews": [
+    {
+     "body": "Thanks @tamird",
+     "state": "APPROVED",
+     "submitted_at": "2026-08-28T08:11:03Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13731#pullrequestreview-5049182432"
+    }
+   ]
+  },
+  "excluded_files": [],
+  "files": [
+   "pydantic-core/src/validators/model_fields.rs",
+   "tests/types/unions/test_union.py"
+  ],
+  "has_tests": true,
+  "merge_sha": "1b108dedcefa1e4bae1c487d03f33f142f83fc44",
+  "merge_style": "squash",
+  "merged_at": "2026-08-28T08:11:12Z",
+  "packet": {
+   "acceptance_draft": [],
+   "body_excerpt": "## Change Summary\n\nA model before validator converts JSON input to Python values. The Python-input helper counted supplied fields, then the outer validator counted them again. This let a smaller union member with a before validator outrank a larger member using the plain JSON path.\n\nCount successfully validated, explicitly supplied known fields once in each input-specific helper. Preserve nested counts without counting extra keys or defaults as local fields.\n\nThe regression covers Python and JSON input, both union orders, and ignored or allowed extras.\n\nEdit by @Viicos: this also does not count extra fields anymore, this was most likely a regression too and doesn't really make sense. \n\n## Related issue number\n\nFixes #13729.\n\n## Checklist\n\n* [x] The pull request title is a good summary of the changes\n* [x] Unit tests for the changes exist\n* [ ] Tests pass on CI\n* [x] Documentation reflects the changes where applicable (the documented smart-union ranking is unchanged)\n* [x] My PR is ready to review\n\nPrepared with AI assistance.",
+   "objective": "Count validated model fields once in smart unions"
+  },
+  "pr": 13731,
+  "repo": "https://github.com/pydantic/pydantic",
+  "schema": 1,
+  "title": "Count validated model fields once in smart unions",
+  "urls": {
+   "base_commit": "https://github.com/pydantic/pydantic/commit/965c23dd93bd5ca7b86224ba39ccbe79399f117b",
+   "compare": "https://github.com/pydantic/pydantic/compare/965c23dd93bd5ca7b86224ba39ccbe79399f117b...1b108dedcefa1e4bae1c487d03f33f142f83fc44",
+   "merge_commit": "https://github.com/pydantic/pydantic/commit/1b108dedcefa1e4bae1c487d03f33f142f83fc44",
+   "pr": "https://github.com/pydantic/pydantic/pull/13731"
+  }
+ },
+ "ruling": {
+  "acceptance": [
+   "A model member with a before validator does not outrank a larger member because its fields were counted twice",
+   "Nested field counts are preserved; extra keys and defaults are not counted as local fields"
+  ],
+  "case_id": "pydantic-pr13731-smart-union-field-count",
+  "expected": [],
+  "objective": "Count validated model fields once in smart union member selection, for both Python and JSON input",
+  "rationale": "Rust change in the vendored pydantic-core validator with Python tests for both input modes and union orders, approved by a maintainer. Nothing referenced it afterwards. Included so the batch has one non-Python diff.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "clean"
+ }
+}

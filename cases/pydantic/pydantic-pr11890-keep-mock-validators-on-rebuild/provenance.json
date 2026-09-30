@@ -1,0 +1,153 @@
+{
+ "proposal": {
+  "base_sha": "e92ad791031e60b791d9c724be688f7adc3b336a",
+  "base_verified": true,
+  "commits": 1,
+  "evidence": {
+   "discussion": [
+    {
+     "body": "## Deploying pydantic-docs with &nbsp;<a href=\"https://pages.dev\"><img alt=\"Cloudflare Pages\" src=\"https://user-images.githubusercontent.com/23264/106598434-9e719e00-654f-11eb-9e59-6167043cfa01.png\" width=\"16\"></a> &nbsp;Cloudflare Pages\n\n<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>42175f7</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;\u2705&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://9bc7b193.pydantic-docs.pages.dev'>https://9bc7b193.pydantic-docs.pages.dev</a>\n</td></tr>\n<tr><td><strong>Branch Preview URL [...]",
+     "created_at": "2025-05-20T10:31:06Z",
+     "url": "https://github.com/pydantic/pydantic/pull/11890#issuecomment-2893844038"
+    },
+    {
+     "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n<!-- __CODSPEED_INSTRUMENTATION_PERFORMANCE_REPORT_COMMENT__ -->\n\n## [CodSpeed Performance Report](https://codspeed.io/pydantic/pydantic/branches/rebuild-mock)\n\n### Merging #11890 will **not alter performance**\n\n<sub>Comparing <code>rebuild-mock</code> (42175f7) with <code>main</code> (53f460c)</sub>\n\n\n\n### Summary\n\n`\u2705 46` untouched benchmarks",
+     "created_at": "2025-05-20T10:38:22Z",
+     "url": "https://github.com/pydantic/pydantic/pull/11890#issuecomment-2893862861"
+    },
+    {
+     "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.71%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\" [...]",
+     "created_at": "2025-05-20T10:40:29Z",
+     "url": "https://github.com/pydantic/pydantic/pull/11890#issuecomment-2893868540"
+    },
+    {
+     "body": "Does this mean that multiple threads might start rebuilding at the same time? Such a race seems not ideal.",
+     "created_at": "2025-05-20T11:04:37Z",
+     "url": "https://github.com/pydantic/pydantic/pull/11890#issuecomment-2893930151"
+    },
+    {
+     "body": "Yes, but this was already the case before 2.11. It isn't ideal as it can result in multiple unnecessary rebuilds, but seems like this is somewhat safe as we got no reports about this before.",
+     "created_at": "2025-05-20T11:29:01Z",
+     "url": "https://github.com/pydantic/pydantic/pull/11890#issuecomment-2893996803"
+    }
+   ],
+   "later_references": [
+    {
+     "body": "<!-- Thank you for your contribution! -->\n<!-- Unless your change is trivial, please create an issue to discuss the change before creating a PR -->\n\n## Change Summary\n\nFixes https://github.com/pydantic/pydantic/issues/11849, regression in https://github.com/pydantic/pydantic/pull/11429.\n\nIn 2.11, as we added the ability to reuse schema validators and serializers, and as such we had to make sure the existing validator/serializer was removed during the rebuild in https://github.com/pydantic/pydantic/pull/11429.\n\nIn multi-threaded environments with the following code:\n\n```python\nclass Base(BaseMo [...]",
+     "kind": "pull_request",
+     "number": 11851,
+     "referenced_at": "2025-05-21T08:11:30Z",
+     "state": "closed",
+     "title": "Make rebuilding logic thread safe",
+     "url": "https://github.com/pydantic/pydantic/pull/11851"
+    },
+    {
+     "body": "### Initial Checks\n\n- [x] I confirm that I'm using Pydantic V2\n\n### Description\n\nWhile using langchain's with_structured_output method, which calls model_json_schema internally, I fairly consistently, but not reliably, receive an AssertionError from Pydantic, asking me to report the bug. \n\nNote, I'm calling this function from threads. Is it thread-safe?\n\nSo here it is:\n\nSystem.Private.CoreLib: Exception while executing function: Functions.extract_static_parts_activity. System.Private.CoreLib: Result: Failure\nException: AssertionError: this is a bug! please report it\nStack:   File \"\\nvm\\v22.19. [...]",
+     "kind": "issue",
+     "number": 12394,
+     "referenced_at": "2025-10-14T09:31:08Z",
+     "state": "open",
+     "title": "Pydantic schema generation fails with AssertionError when used with langchain",
+     "url": "https://github.com/pydantic/pydantic/issues/12394"
+    },
+    {
+     "body": "Applies the same logic from models, introduced in\nhttps://github.com/pydantic/pydantic/pull/11890.\n\nFixes https://github.com/pydantic/pydantic/issues/12505.\n\n<!-- Thank you for your contribution! -->\n<!-- Unless your change is trivial, please create an issue to discuss the change before creating a PR -->\n\n## Change Summary\n\n<!-- Please give a short summary of the changes. -->\n\n## Related issue number\n\n<!-- WARNING: please use \"fix #123\" style references so the issue is closed when this PR is merged. -->\n\n## Checklist\n\n* [ ] The pull request title is a good summary of the changes - it will be u [...]",
+     "kind": "pull_request",
+     "number": 12513,
+     "referenced_at": "2025-11-10T18:58:58Z",
+     "state": "closed",
+     "title": "Do not delete mock validator/serializer in `rebuild_dataclass()`",
+     "url": "https://github.com/pydantic/pydantic/pull/12513"
+    },
+    {
+     "body": "### Initial Checks\n\n- [x] I confirm that I'm using Pydantic V2\n\n### Description\n\nThis just hit us in production:\n\n```\nTraceback (most recent call last):\n  ...\n  File \"fastapi/routing.py\", line 120, in app\n    response = await f(request)\n  File \"fastapi/routing.py\", line 674, in app\n    raw_response = await run_endpoint_function(\n  File \"fastapi/routing.py\", line 330, in run_endpoint_function\n    return await run_in_threadpool(dependant.call, **values)\n  File \"starlette/concurrency.py\", line 34, in run_in_threadpool\n    return await anyio.to_thread.run_sync(func)\n  File \"anyio/to_thread.py\", li [...]",
+     "kind": "issue",
+     "number": 13419,
+     "referenced_at": "2026-07-08T07:19:17Z",
+     "state": "closed",
+     "title": "\"dictionary changed size during iteration\" during `model_rebuild`",
+     "url": "https://github.com/pydantic/pydantic/issues/13419"
+    },
+    {
+     "body": "<!-- Thank you for your contribution! -->\n<!-- Unless your change is trivial, please create an issue to discuss the change before creating a PR -->\n\n## Change Summary\n\nRevival of https://github.com/pydantic/pydantic/pull/11851, to fix https://github.com/pydantic/pydantic/issues/13419.\n\niirc, in https://github.com/pydantic/pydantic/pull/11851 I had to put the lock on every path instantiating models (e.g. `BaseModel.__init__()`) because without https://github.com/pydantic/pydantic/pull/11890 -- the alternative implementation to this revived PR -- concurrent instantiation attempts would result in [...]",
+     "kind": "pull_request",
+     "number": 13438,
+     "referenced_at": "2026-07-13T17:28:09Z",
+     "state": "closed",
+     "title": "Make model rebuilding logic thread safe",
+     "url": "https://github.com/pydantic/pydantic/pull/13438"
+    },
+    {
+     "body": "This MR contains the following updates:\n\n| Package | Update | Change |\n|---|---|---|\n| [pydantic](https://github.com/pydantic/pydantic) ([changelog](https://docs.pydantic.dev/latest/changelog/)) | major | `==1.10.26` \u2192 `==2.13.4` |\n\n---\n\n### Release Notes\n\n<details>\n<summary>pydantic/pydantic (pydantic)</summary>\n\n### [`v2.13.4`](https://github.com/pydantic/pydantic/blob/HEAD/HISTORY.md#v2134-2026-05-06)\n\n[Compare Source](https://github.com/pydantic/pydantic/compare/v2.13.3...v2.13.4)\n\n[GitHub release](https://github.com/pydantic/pydantic/releases/tag/v2.13.4)\n\n##### What's Changed\n\n##### Pack [...]",
+     "kind": "pull_request",
+     "number": 3,
+     "referenced_at": "2026-08-26T10:29:42Z",
+     "state": "closed",
+     "title": "chore(deps): update dependency pydantic to v2",
+     "url": "https://github.com/Project-Tick/meta/pull/3"
+    }
+   ],
+   "linked_issues": [
+    {
+     "body": "Implemented what we discussed in #120\n\nAlso changed pytest execution in the Makefile (was failing in my machine).",
+     "created_at": "2018-02-02T11:39:52Z",
+     "number": 123,
+     "title": "Subclass abcmeta",
+     "url": "https://github.com/pydantic/pydantic/pull/123"
+    },
+    {
+     "body": "### Initial Checks\n\n- [x] I confirm that I'm using Pydantic V2\n\n### Description\n\nAfter upgrading to pydantic 2.11.3 we have observed rare occurrences of a bug that seems to point to some type of race condition. We have not been able to reproduce this in a controlled setting, but 1% of our production containers shows this bug close after initial startup.\n\nThis happens on multiple models which directly or indirectly derive from `BaseModel` and we observe that the lowest class in the inheritance chain seems to have been mysteriously *skipped*. Please refer to the code example for more clarity. \n\nThe example 1 is by far the most pure and most minimalistic one, example 2 shows an occurance where there is a chain of inheritance. I've included it to give a more detailed perspective in the behaviour where it seems to skip 1 layer of inheritance.\n\n[to be clear, the examples are not able to reproduce the race condition as-is, but they illustrate the relevant models involved]\n\n### Example Code\n\n```Python\nfrom __future__ import annotations # support forward refs\nfrom pydantic import BaseModel , model_validator, ValidationInfo\nfrom typing import Self\n\n\n\nclass Direct(BaseModel):\n    model_config = ConfigDict(populate_by_name=True)\n    id: str\n    description: Optional[Translatable] = None\n    ...\n\nclass Translatable(BaseModel):   \n    en: str = \"\"\n    ...\n\nd = Direct(id=\"test\", description=Translatable(en=\"ok\")) # raises PydanticUserError(\"Pydantic models should inherit from BaseModel, Bas [...]",
+     "created_at": "2025-05-07T08:48:08Z",
+     "number": 11849,
+     "title": "(race condition?) Subclass skipped in model instantiation",
+     "url": "https://github.com/pydantic/pydantic/issues/11849"
+    }
+   ],
+   "review_comments": [],
+   "reviews": [
+    {
+     "body": "",
+     "state": "APPROVED",
+     "submitted_at": "2025-05-21T08:09:34Z",
+     "url": "https://github.com/pydantic/pydantic/pull/11890#pullrequestreview-2856735838"
+    }
+   ]
+  },
+  "excluded_files": [],
+  "files": [
+   "pydantic/main.py"
+  ],
+  "has_tests": false,
+  "merge_sha": "0a21ab14ecc200923102e3f831cb26b0282899e9",
+  "merge_style": "squash",
+  "merged_at": "2025-05-21T08:11:12Z",
+  "packet": {
+   "acceptance_draft": [],
+   "body_excerpt": "`pydantic-core` won't use them anyway as it checks for `__pydantic_complete__` first. This is done in order to avoid concurrency issues, where a concurrent model instantiation would use the validator from a parent class if the `model_rebuild()` call did not finish in another thread.\n\n<!-- Thank you for your contribution! -->\n<!-- Unless your change is trivial, please create an issue to discuss the change before creating a PR -->\n\n## Change Summary\n\nFixes https://github.com/pydantic/pydantic/issues/11849, regression in https://github.com/pydantic/pydantic/pull/11429, alternative to https://github.com/pydantic/pydantic/pull/11851.\n\n<!-- Please give a short summary of the changes. -->\n\n## Related issue number\n\n<!-- WARNING: please use \"fix #123\" style references so the issue is closed when this PR is merged. -->\n\n## Checklist\n\n* [ ] The pull request title is a good summary of the changes - it will be used in the changelog\n* [ ] Unit tests for the changes exist\n* [ ] Tests pass on CI\n* [ ] Documentation reflects the changes where applicable\n* [ ] My PR is ready to review, **please add a comment including the phrase \"please review\" to assign reviewers**",
+   "objective": "Do not delete mock validator/serializer in `model_rebuild()`"
+  },
+  "pr": 11890,
+  "repo": "https://github.com/pydantic/pydantic",
+  "schema": 1,
+  "title": "Do not delete mock validator/serializer in `model_rebuild()`",
+  "urls": {
+   "base_commit": "https://github.com/pydantic/pydantic/commit/e92ad791031e60b791d9c724be688f7adc3b336a",
+   "compare": "https://github.com/pydantic/pydantic/compare/e92ad791031e60b791d9c724be688f7adc3b336a...0a21ab14ecc200923102e3f831cb26b0282899e9",
+   "merge_commit": "https://github.com/pydantic/pydantic/commit/0a21ab14ecc200923102e3f831cb26b0282899e9",
+   "pr": "https://github.com/pydantic/pydantic/pull/11890"
+  }
+ },
+ "ruling": {
+  "acceptance": [
+   "Real validators, serializers and core schemas are still deleted before rebuilding",
+   "Mock instances are left in place"
+  ],
+  "case_id": "pydantic-pr11890-keep-mock-validators-on-rebuild",
+  "expected": [],
+  "objective": "Do not delete mock validators and serializers in model_rebuild(), so a concurrent instantiation during a rebuild cannot fall back to a parent class validator",
+  "rationale": "The change is correct as written. The later PR #12513 applied the same treatment to rebuild_dataclass(), which lives in a file this diff does not touch, so the omission cannot be an expected finding on this diff; the thread-safety follow-ups (#11851, #13438) concern the wider rebuild logic.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "clean"
+ }
+}

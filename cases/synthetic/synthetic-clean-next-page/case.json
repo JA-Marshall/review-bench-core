@@ -1,0 +1,22 @@
+{
+ "acceptance": [
+  "page returns the window and a has_next flag",
+  "has_next is False on the final page"
+ ],
+ "author": "history",
+ "base_sha": "e828f548bf351902ebe897ad2ec707b285334333",
+ "expected": [],
+ "files": [
+  "ledger/paging.py",
+  "tests/test_paging.py"
+ ],
+ "id": "synthetic-clean-next-page",
+ "kind": "clean",
+ "notes": "Synthetic example change, clean by construction.",
+ "objective": "Return whether another page follows the requested page",
+ "repo": "https://example.invalid/ledger",
+ "source": {
+  "example_step": 2,
+  "merge": "1926a8a67f7105a450542fbf0bee1be734cc2152"
+ }
+}

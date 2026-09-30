@@ -1,0 +1,41 @@
+diff --git a/pydantic/_internal/_generate_schema.py b/pydantic/_internal/_generate_schema.py
+index 37c761f40..3766cfee1 100644
+--- a/pydantic/_internal/_generate_schema.py
++++ b/pydantic/_internal/_generate_schema.py
+@@ -372,7 +372,7 @@ class GenerateSchema:
+         collections.abc.MutableSet: lambda self, obj: self._set_schema(Any),
+         frozenset: lambda self, obj: self._frozenset_schema(Any),
+         collections.abc.Set: lambda self, obj: self._frozenset_schema(Any),
+-        collections.abc.MutableSequence: lambda self, obj: self._sequence_schema(Any),
++        collections.abc.MutableSequence: lambda self, obj: self._list_schema(Any),
+         collections.abc.Sequence: lambda self, obj: self._sequence_schema(Any),
+         collections.deque: lambda self, obj: self._deque_schema(Any),
+         collections.abc.Iterable: lambda self, obj: self._iterable_schema(obj),
+diff --git a/tests/types/test_list.py b/tests/types/test_list.py
+index 8c5ec301d..1cd98b247 100644
+--- a/tests/types/test_list.py
++++ b/tests/types/test_list.py
+@@ -1,4 +1,5 @@
+ from collections import deque
++from collections.abc import MutableSequence
+ from typing import Annotated
+ 
+ import annotated_types
+@@ -288,3 +289,17 @@ def test_list_strict() -> None:
+     assert exc_info.value.errors(include_url=False) == [
+         {'type': 'int_type', 'loc': (0,), 'msg': 'Input should be a valid integer', 'input': '1'}
+     ]
++
++
++def test_bare_mutable_sequence() -> None:
++    """Regression test for https://github.com/pydantic/pydantic/pull/13573."""
++    ta = TypeAdapter(MutableSequence)
++
++    assert ta.validate_python([1, '2']) == [1, '2']
++    assert ta.validate_python((1, '2')) == [1, '2']
++
++    with pytest.raises(ValidationError) as exc_info:
++        ta.validate_python('abc')
++    assert exc_info.value.errors(include_url=False) == [
++        {'type': 'list_type', 'loc': (), 'msg': 'Input should be a valid list', 'input': 'abc'}
++    ]

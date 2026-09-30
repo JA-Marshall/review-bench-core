@@ -1,0 +1,24 @@
+{
+ "acceptance": [
+  "Real validators, serializers and core schemas are still deleted before rebuilding",
+  "Mock instances are left in place"
+ ],
+ "author": "history",
+ "base_sha": "e92ad791031e60b791d9c724be688f7adc3b336a",
+ "expected": [],
+ "files": [
+  "pydantic/main.py"
+ ],
+ "id": "pydantic-pr11890-keep-mock-validators-on-rebuild",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Do not delete mock validators and serializers in model_rebuild(), so a concurrent instantiation during a rebuild cannot fall back to a parent class validator",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "0a21ab14ecc200923102e3f831cb26b0282899e9",
+  "merge_style": "squash",
+  "merged_at": "2025-05-21T08:11:12Z",
+  "pr": 11890,
+  "url": "https://github.com/pydantic/pydantic/pull/11890"
+ }
+}

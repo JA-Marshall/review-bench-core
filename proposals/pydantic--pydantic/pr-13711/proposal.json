@@ -1,0 +1,112 @@
+{
+ "base_sha": "952c239fadf1f64e5d29cbf15d1696548d8ac53c",
+ "base_verified": true,
+ "commits": 3,
+ "evidence": {
+  "discussion": [
+   {
+    "body": "please review",
+    "created_at": "2026-08-26T03:32:21Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13711#issuecomment-5420199806"
+   },
+   {
+    "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **not alter performance**\n\n\n`\u2705 216` untouched benchmarks  \n`\u23e9 163` skipped benchmarks[^skipped]  \n\n\n\n\n\n---\n\n<sub>Comparing <code>MLuc24:fix/temporal-validation-json-schema</code> (f70b9e6) with <code>main</code> (952c239)</sub>\n\n<a href=\"https://app.codspeed.io/pydantic/pydantic/branches/MLuc24%3Afix%2Ftemporal-validation-json-schema?utm_source=github&utm_medium=comment-v2&utm_content=button\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://codspeed.io/pr-report/open-in-codspeed-dark.svg\">\n    [...]",
+    "created_at": "2026-08-26T03:41:14Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13711#issuecomment-5420258707"
+   },
+   {
+    "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.88%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\" [...]",
+    "created_at": "2026-08-26T03:47:34Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13711#issuecomment-5420301751"
+   },
+   {
+    "body": "On the CodSpeed failure: I believe it is noise, and the benchmark suite says so fairly clearly.\n\nThe regressed benchmark is `test_simple_recursive_model_schema_generation`, which is\n\n```python\nclass Foo(DeferredModel):\n    a: int = 123\n    sibling: 'Foo' = None\n\nbenchmark(rebuild_model, Foo)\n```\n\nand `rebuild_model` is `model_rebuild(force=True, ...)` - that builds the core schema, not a JSON schema, so `GenerateJsonSchema` never runs. There are no temporal fields in that file either. More generally, grepping `tests/benchmarks/` for `json_schema` returns nothing: no benchmark in the suite gene [...]",
+    "created_at": "2026-08-26T04:39:08Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13711#issuecomment-5420678708"
+   }
+  ],
+  "later_references": [
+   {
+    "body": "### Initial Checks\n\n- [x] I confirm that I'm using Pydantic V2\n\n### Description\n\nSet `ser_json_temporal` to `'seconds'` or `'milliseconds'`, give a temporal field a default, and the validation JSON schema declares the field as an ISO 8601 string while setting its `default` to a number. Both sit in the same property and contradict each other. `ser_json_timedelta='float'` does the same for `timedelta` on its own.\n\n#13711 made `_common_temporal_schema()` mode aware, so validation schemas now stay `{'type': 'string'}`. `encode_default()` didn't get the same treatment. It still dumps the default th [...]",
+    "kind": "issue",
+    "number": 13840,
+    "referenced_at": "2026-09-21T06:39:28Z",
+    "state": "closed",
+    "title": "Validation JSON schema keeps a numeric temporal `default` under `type: string`",
+    "url": "https://github.com/pydantic/pydantic/issues/13840"
+   }
+  ],
+  "linked_issues": [],
+  "review_comments": [
+   {
+    "body": "```suggestion\n```",
+    "line": 876,
+    "path": "pydantic/json_schema.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13711#discussion_r3861978711"
+   }
+  ],
+  "reviews": [
+   {
+    "body": "Copilot was unable to review this pull request because the user who requested the review has reached their quota limit.",
+    "state": "COMMENTED",
+    "submitted_at": "2026-08-26T03:32:17Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13711#pullrequestreview-5026512689"
+   }
+  ]
+ },
+ "excluded_files": [],
+ "files": [
+  "pydantic/json_schema.py",
+  "tests/test_json_schema.py"
+ ],
+ "has_tests": true,
+ "merge_sha": "d6e2021f761fc6bd53bd955a9cc3916cc5d0bfe6",
+ "merge_style": "squash",
+ "merged_at": "2026-08-26T11:05:15Z",
+ "packet": {
+  "acceptance_draft": [
+   "`date`, `time` and `datetime` picked this up in #13665, which is on `main` but not in a release, so this is a regression that has not shipped."
+  ],
+  "body_excerpt": "## Change Summary\n\n`ser_json_temporal` and `ser_json_timedelta` only change what is *emitted*. Validation keeps accepting ISO 8601 strings whatever they are set to. But `_common_temporal_schema` consults them in both modes, so a validation JSON schema built under `ser_json_temporal='seconds'` declares `{'type': 'number'}` for a `datetime` \u2014 describing input the model would take *and* forbidding input it actually accepts.\n\nOn `main`:\n\n```python\nfrom datetime import datetime\n\nfrom pydantic import BaseModel, ConfigDict\n\nclass Model(BaseModel):\n    model_config = ConfigDict(ser_json_temporal='seconds')\n\n    dt: datetime\n\nModel.model_json_schema()['properties']['dt']\n#> {'title': 'Dt', 'type': 'number'}\n\nModel.model_validate_json('{\"dt\": \"2032-01-02T03:04:05\"}')\n#> Model(dt=datetime.datetime(2032, 1, 2, 3, 4, 5))\n```\n\nThe schema says the field is a number; the model parses the string happily. There is no `val_json_temporal` \u2014 `val_temporal_unit` only decides how a *number* is read, it does not stop ISO strings being accepted \u2014 so the validation schema should stay `{'type': 'string', 'format': 'date-time'}`, which is what it has always been.\n\nThe fix gates the numeric branch on the mode:\n\n```python\nif self.mode == 'serialization' and temporal_format != 'iso8601':\n```\n\nSerialization schemas are unchanged.\n\n## Scope\n\nTwo parts, one line of code between them:\n\n- `date`, `time` and `datetime` picked this up in #13665, which is on `main` but not in a release, so this is a regression tha [...]",
+  "objective": "Don't apply serialization temporal formats to validation JSON schemas"
+ },
+ "pr": 13711,
+ "repo": "https://github.com/pydantic/pydantic",
+ "ruling": {
+  "acceptance": [
+   "Validation-mode schemas for date, time, datetime and timedelta are string schemas regardless of the temporal configuration",
+   "Serialization-mode schemas still reflect the configured format"
+  ],
+  "case_id": "pydantic-pr13711-temporal-format-serialization-only",
+  "expected": [
+   {
+    "description": "A temporal field with a default gets a serialized numeric default while the validation schema now declares the field a string.",
+    "file": "pydantic/json_schema.py",
+    "id": "numeric-default-under-string-type",
+    "keywords": [
+     "default",
+     "numeric default",
+     "contradict",
+     "serialized default",
+     "default_schema",
+     "'number'",
+     "under type"
+    ],
+    "severity": "should_fix"
+   }
+  ],
+  "objective": "Apply ser_json_temporal and ser_json_timedelta formats only to serialization-mode JSON schemas; validation schemas keep the ISO 8601 string form",
+  "rationale": "Restricts the temporal format to serialization mode with tests. Issue #13840, three weeks later, reported that a temporal field with a default now gets a numeric serialized default under a validation schema that says string; that comes from how defaults are serialized rather than from these lines, so it is recorded as should_fix and the case stays clean.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "clean"
+ },
+ "schema": 1,
+ "title": "Don't apply serialization temporal formats to validation JSON schemas",
+ "urls": {
+  "base_commit": "https://github.com/pydantic/pydantic/commit/952c239fadf1f64e5d29cbf15d1696548d8ac53c",
+  "compare": "https://github.com/pydantic/pydantic/compare/952c239fadf1f64e5d29cbf15d1696548d8ac53c...d6e2021f761fc6bd53bd955a9cc3916cc5d0bfe6",
+  "merge_commit": "https://github.com/pydantic/pydantic/commit/d6e2021f761fc6bd53bd955a9cc3916cc5d0bfe6",
+  "pr": "https://github.com/pydantic/pydantic/pull/13711"
+ }
+}

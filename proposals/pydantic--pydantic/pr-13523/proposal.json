@@ -1,0 +1,73 @@
+{
+ "base_sha": "b75fadbaa55d4d700a388f1b67683ef0be0ed540",
+ "base_verified": true,
+ "commits": 7,
+ "evidence": {
+  "discussion": [
+   {
+    "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **not alter performance**\n\n\n`\u2705 216` untouched benchmarks  \n\n\n\n\n\n---\n\n<sub>Comparing <code>linear-schema-gather</code> (6b00e74) with <code>main</code> (e8b6ff8)</sub>\n\n<a href=\"https://app.codspeed.io/pydantic/pydantic/branches/linear-schema-gather?utm_source=github&utm_medium=comment-v2&utm_content=button\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://codspeed.io/pr-report/open-in-codspeed-dark.svg\">\n    <source media=\"(prefers-color-scheme: light)\" srcset=\"https://codspeed.io/pr-report/op [...]",
+    "created_at": "2026-07-27T18:46:42Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13523#issuecomment-5095413376"
+   },
+   {
+    "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 96.03%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-96%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\" [...]",
+    "created_at": "2026-07-27T18:55:02Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13523#issuecomment-5095492533"
+   },
+   {
+    "body": "## Deploying pydantic-docs with &nbsp;<a href=\"https://pages.dev\"><img alt=\"Cloudflare Pages\" src=\"https://user-images.githubusercontent.com/23264/106598434-9e719e00-654f-11eb-9e59-6167043cfa01.png\" width=\"16\"></a> &nbsp;Cloudflare Pages\n\n<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>6b00e74</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;\u2705&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://1e12cbdd.pydantic-docs.pages.dev'>https://1e12cbdd.pydantic-docs.pages.dev</a>\n</td></tr>\n<tr><td><strong>Branch Preview URL [...]",
+    "created_at": "2026-07-28T00:21:47Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13523#issuecomment-5098345551"
+   }
+  ],
+  "later_references": [],
+  "linked_issues": [],
+  "review_comments": [
+   {
+    "body": "```suggestion\n```",
+    "line": 359,
+    "path": "tests/benchmarks/test_model_schema_generation.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13523#discussion_r3677536114"
+   }
+  ],
+  "reviews": []
+ },
+ "excluded_files": [],
+ "files": [
+  "pydantic/_internal/_schema_gather.py",
+  "tests/test_edge_cases.py"
+ ],
+ "has_tests": true,
+ "merge_sha": "c333d775d49cfa91ab2686d11f9002ea1933ec16",
+ "merge_style": "squash",
+ "merged_at": "2026-08-03T18:54:04Z",
+ "packet": {
+  "acceptance_draft": [],
+  "body_excerpt": "Core schemas of completed models are stored \u2014 and thus shared \u2014 when embedded in referencing schemas, so the structure traversed during schema cleaning is a DAG, not a tree. `gather_schemas_for_cleaning()` traversed it once per *path*, which is exponential in the number of interconnected models: in a chain of models each referencing the previous three, a single model class 25 levels deep took 16 seconds to create, and a 300-model chain could not finish building at all. For `google.genai` (766 models), roughly 8\u00d7 more schema nodes were walked than exist.\n\nEach schema object is now traversed only once. To preserve the per-encounter semantics of the definition reference counting, the references encountered within a schema's traversal span are marked as non-inlinable when the schema object is reached again \u2014 including while its traversal is still in progress, which would otherwise inline a definition into a reference reachable from that same definition and create a cyclic schema.\n\nThe 300-model chain above now builds in under a second; the added regression test would effectively never finish without this change.\n\n~~A second commit makes `FieldInfo._qualifiers` use a shared empty `frozenset` (the attribute is only ever read, and a per-field empty `set` costs 216 bytes).~~\n\nhttps://claude.ai/code/session_01WcrhFAeqYDGVDA7ZiZEpXo",
+  "objective": "Avoid exponential core schema traversal in `gather_schemas_for_cleaning()`"
+ },
+ "pr": 13523,
+ "repo": "https://github.com/pydantic/pydantic",
+ "ruling": {
+  "acceptance": [
+   "Each schema object is visited once even when several paths reach it",
+   "Definition reference counting keeps its per-encounter semantics",
+   "Creating chains of interconnected models completes in linear time"
+  ],
+  "case_id": "pydantic-pr13523-linear-schema-gathering",
+  "expected": [],
+  "objective": "Traverse each core schema object once in gather_schemas_for_cleaning(), so schema cleaning is linear in the number of schemas rather than exponential in the number of paths",
+  "rationale": "Performance fix that visits each schema object once; the PR body explains how per-encounter reference counting is preserved and the diff carries a regression test. Nothing referenced it afterwards.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "clean"
+ },
+ "schema": 1,
+ "title": "Avoid exponential core schema traversal in `gather_schemas_for_cleaning()`",
+ "urls": {
+  "base_commit": "https://github.com/pydantic/pydantic/commit/b75fadbaa55d4d700a388f1b67683ef0be0ed540",
+  "compare": "https://github.com/pydantic/pydantic/compare/b75fadbaa55d4d700a388f1b67683ef0be0ed540...c333d775d49cfa91ab2686d11f9002ea1933ec16",
+  "merge_commit": "https://github.com/pydantic/pydantic/commit/c333d775d49cfa91ab2686d11f9002ea1933ec16",
+  "pr": "https://github.com/pydantic/pydantic/pull/13523"
+ }
+}

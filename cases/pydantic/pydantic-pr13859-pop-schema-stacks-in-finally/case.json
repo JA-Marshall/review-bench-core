@@ -1,0 +1,25 @@
+{
+ "acceptance": [
+  "A schema build that raises and is caught leaves no stale entry on either stack",
+  "Subsequent Self annotations and handler.field_name resolve correctly after a failed build"
+ ],
+ "author": "history",
+ "base_sha": "dae7e2065283db4d3d677ebae9d2dc8423131c62",
+ "expected": [],
+ "files": [
+  "pydantic/_internal/_generate_schema.py",
+  "tests/test_edge_cases.py"
+ ],
+ "id": "pydantic-pr13859-pop-schema-stacks-in-finally",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Always pop the field name and model type stacks in schema generation, even when schema generation raises inside the with block",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "afff1eb7040e568de521d05ebd8b8747f96ad9d9",
+  "merge_style": "squash",
+  "merged_at": "2026-09-25T01:49:06Z",
+  "pr": 13859,
+  "url": "https://github.com/pydantic/pydantic/pull/13859"
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "acceptance": [
+  "A model member with a before validator does not outrank a larger member because its fields were counted twice",
+  "Nested field counts are preserved; extra keys and defaults are not counted as local fields"
+ ],
+ "author": "history",
+ "base_sha": "965c23dd93bd5ca7b86224ba39ccbe79399f117b",
+ "expected": [],
+ "files": [
+  "pydantic-core/src/validators/model_fields.rs",
+  "tests/types/unions/test_union.py"
+ ],
+ "id": "pydantic-pr13731-smart-union-field-count",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Count validated model fields once in smart union member selection, for both Python and JSON input",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "1b108dedcefa1e4bae1c487d03f33f142f83fc44",
+  "merge_style": "squash",
+  "merged_at": "2026-08-28T08:11:12Z",
+  "pr": 13731,
+  "url": "https://github.com/pydantic/pydantic/pull/13731"
+ }
+}

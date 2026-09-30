@@ -1,0 +1,25 @@
+{
+ "acceptance": [
+  "TypeAdapter(MutableSequence) rejects non-sequence input such as a str and coerces valid input to a list",
+  "Subscripted MutableSequence[T] behaviour is unchanged"
+ ],
+ "author": "history",
+ "base_sha": "1fb7121d99c903c6decc0debcc78b113fc17d2f4",
+ "expected": [],
+ "files": [
+  "pydantic/_internal/_generate_schema.py",
+  "tests/types/test_list.py"
+ ],
+ "id": "pydantic-pr13690-mutable-sequence-list-schema",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Validate bare collections.abc.MutableSequence with the list schema, as before the type-lookup refactor",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "dc403980c7c1b43dc04d19d52fb9164ad7b1e516",
+  "merge_style": "squash",
+  "merged_at": "2026-08-24T09:51:27Z",
+  "pr": 13690,
+  "url": "https://github.com/pydantic/pydantic/pull/13690"
+ }
+}

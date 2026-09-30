@@ -1,0 +1,11 @@
+diff --git a/ledger/paging.py b/ledger/paging.py
+index f55030c..b173be9 100644
+--- a/ledger/paging.py
++++ b/ledger/paging.py
+@@ -6,5 +6,5 @@ def page(items, offset, limit):
+     if offset < 0 or limit <= 0:
+         raise ValueError("offset must be >= 0 and limit > 0")
+     window = list(items[offset:offset + limit])
+-    has_next = offset + limit < len(items)
++    has_next = offset + limit <= len(items)
+     return window, has_next

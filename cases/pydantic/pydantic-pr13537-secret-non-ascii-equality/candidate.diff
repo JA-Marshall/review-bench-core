@@ -1,0 +1,31 @@
+diff --git a/pydantic/types.py b/pydantic/types.py
+index 4a5f68d02..ab5bb200a 100644
+--- a/pydantic/types.py
++++ b/pydantic/types.py
+@@ -1888,7 +1888,11 @@ class SecretStr(_SecretField[str]):
+         if not isinstance(other, self.__class__):
+             return False
+ 
+-        return secrets.compare_digest(self.get_secret_value(), other.get_secret_value())
++        # `secrets.compare_digest()` only supports ASCII strings, so encode to bytes first:
++        return secrets.compare_digest(
++            self.get_secret_value().encode('utf-8', errors='surrogatepass'),
++            other.get_secret_value().encode('utf-8', errors='surrogatepass'),
++        )
+ 
+     def _display(self) -> str:
+         return _secret_display(self._secret_value)
+diff --git a/tests/test_types.py b/tests/test_types.py
+index c899a3ba6..e70a0102e 100644
+--- a/tests/test_types.py
++++ b/tests/test_types.py
+@@ -4463,6 +4463,9 @@ def test_secretstr_equality():
+     assert SecretStr('123') != SecretStr('321')
+     assert SecretStr('123') != '123'
+     assert SecretStr('123') is not SecretStr('123')
++    assert SecretStr('café') == SecretStr('café')
++    assert SecretStr('café') != SecretStr('cafe')
++    assert SecretStr('\ud800') == SecretStr('\ud800')  # lone surrogate, unencodable with strict utf-8
+ 
+ 
+ def test_secretstr_idempotent():

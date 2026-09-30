@@ -1,0 +1,23 @@
+{
+ "acceptance": [
+  "apply_discount rejects percentages outside 0 to 100",
+  "The result is quantised to two decimal places",
+  "Money stays Decimal throughout"
+ ],
+ "author": "history",
+ "base_sha": "0ecca1382cd983e5a0605b62fda011726535c843",
+ "expected": [],
+ "files": [
+  "ledger/money.py",
+  "tests/test_money.py"
+ ],
+ "id": "synthetic-clean-discount",
+ "kind": "clean",
+ "notes": "Synthetic example change, clean by construction.",
+ "objective": "Apply a whole-number percentage discount to a line total, rounded to the penny",
+ "repo": "https://example.invalid/ledger",
+ "source": {
+  "example_step": 1,
+  "merge": "e828f548bf351902ebe897ad2ec707b285334333"
+ }
+}

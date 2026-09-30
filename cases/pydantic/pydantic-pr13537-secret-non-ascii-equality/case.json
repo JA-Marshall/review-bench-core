@@ -1,0 +1,26 @@
+{
+ "acceptance": [
+  "SecretStr values containing non-ASCII characters compare equal when their secrets are equal",
+  "The comparison remains constant-time",
+  "SecretBytes behaviour is unchanged"
+ ],
+ "author": "history",
+ "base_sha": "a54529f06204ecb8f940d2506ff66dd1521917c8",
+ "expected": [],
+ "files": [
+  "pydantic/types.py",
+  "tests/test_types.py"
+ ],
+ "id": "pydantic-pr13537-secret-non-ascii-equality",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Fix SecretStr equality raising TypeError on non-ASCII values while keeping the constant-time comparison",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "35b8d94c1435a3e78fc919cfdb439a1ef85a8d6f",
+  "merge_style": "squash",
+  "merged_at": "2026-07-29T14:06:52Z",
+  "pr": 13537,
+  "url": "https://github.com/pydantic/pydantic/pull/13537"
+ }
+}

@@ -1,0 +1,75 @@
+{
+ "proposal": {
+  "base_sha": "dae7e2065283db4d3d677ebae9d2dc8423131c62",
+  "base_verified": true,
+  "commits": 1,
+  "evidence": {
+   "discussion": [
+    {
+     "body": "@saquibjawedbit You do not have permission to open a PR without being assigned to the referenced issue (#13857).",
+     "created_at": "2026-09-24T11:00:18Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13859#issuecomment-5812795799"
+    },
+    {
+     "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **not alter performance**\n\n\n`\u2705 216` untouched benchmarks  \n`\u23e9 163` skipped benchmarks[^skipped]  \n\n\n\n\n\n---\n\n<sub>Comparing <code>saquibjawedbit:fix-schema-stack-pop-on-error</code> (b30eec4) with <code>main</code> (db9d77c)</sub>\n\n<a href=\"https://app.codspeed.io/pydantic/pydantic/branches/saquibjawedbit%3Afix-schema-stack-pop-on-error?utm_source=github&utm_medium=comment-v2&utm_content=button\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://codspeed.io/pr-report/open-in-codspeed-dark.svg\">\n  [...]",
+     "created_at": "2026-09-24T11:07:26Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13859#issuecomment-5812888350"
+    },
+    {
+     "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.99%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\" [...]",
+     "created_at": "2026-09-24T11:09:39Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13859#issuecomment-5812916967"
+    }
+   ],
+   "later_references": [],
+   "linked_issues": [
+    {
+     "body": "## Description\n\n`_FieldNameStack.push()` and `_ModelTypeStack.push()` in `pydantic/_internal/_generate_schema.py` (around lines 2910/2929) push onto their internal list, `yield`, then pop:\n\n```python\n@contextmanager\ndef push(self, field_name: str) -> Iterator[None]:\n    self._stack.append(field_name)\n    yield\n    self._stack.pop()\n```\n\nIf the code inside the `with self.field_name_stack.push(...):` block raises (schema generation is deeply recursive and can legitimately raise, e.g. `PydanticUserError` for a circular reference a few lines above this class in the same file), the `yield`'s continuation - the `.pop()` - never runs. The stale entry stays on the stack forever, and corrupts every *later*, otherwise-unrelated `push()`/`get()` on that same `GenerateSchema` instance, not just the one that failed.\n\n## Reproduction\n\nIsolated (no pydantic-core needed to demonstrate - this is pure Python control flow, verified against the actual class body copied verbatim):\n\n```python\nfrom contextlib import contextmanager\n\nclass _FieldNameStack:\n    __slots__ = ('_stack',)\n    def __init__(self):\n        self._stack = []\n    @contextmanager\n    def push(self, field_name):\n        self._stack.append(field_name)\n        yield\n        self._stack.pop()\n    def get(self):\n        return self._stack[-1] if self._stack else None\n\nstack = _FieldNameStack()\n\ntry:\n    with stack.push('some_field'):\n        raise ValueError('boom')  # simulates any exception during schema generation\nexcept ValueErro [...]",
+     "created_at": "2026-09-24T03:32:35Z",
+     "number": 13857,
+     "title": "_FieldNameStack/_ModelTypeStack lose their pop() on exception, corrupting later unrelated schema builds",
+     "url": "https://github.com/pydantic/pydantic/issues/13857"
+    }
+   ],
+   "review_comments": [],
+   "reviews": []
+  },
+  "excluded_files": [],
+  "files": [
+   "pydantic/_internal/_generate_schema.py",
+   "tests/test_edge_cases.py"
+  ],
+  "has_tests": true,
+  "merge_sha": "afff1eb7040e568de521d05ebd8b8747f96ad9d9",
+  "merge_style": "squash",
+  "merged_at": "2026-09-25T01:49:06Z",
+  "packet": {
+   "acceptance_draft": [],
+   "body_excerpt": "## Change Summary\n\n`_FieldNameStack.push()` and `_ModelTypeStack.push()` appended to the stack, yielded, then popped, with no `try`/`finally`. If schema generation raised inside the `with` block and the error was caught further up (for example a custom `__get_pydantic_core_schema__` that tries `handler.generate_schema(...)` and falls back on `PydanticSchemaGenerationError`), the entry was never popped and leaked into the rest of the build.\n\nIn practice this means that after such a fallback, a later `Self` annotation in the same model resolves to the wrong class (the stale entry from the failed build), and `handler.field_name` returns a stale field name.\n\nThe fix wraps the `yield` in `try`/`finally` for both stacks, the same way `_Definitions.get_definition_ref_schema()` already does.\n\nAdded two regression tests in `tests/test_edge_cases.py` (one per stack). Both fail on `main` and pass with this change. Full test suite, `ruff`, and the pre-commit typecheck hook pass locally.\n\n## Related issue number\n\nfix #13857\n\n## Checklist\n\n* [x] The pull request title is a good summary of the changes - it will be used in the changelog\n* [x] Unit tests for the changes exist\n* [ ] Tests pass on CI\n* [x] Documentation reflects the changes where applicable\n* [ ] My PR is ready to review, **please add a comment including the phrase \"please review\" to assign reviewers**",
+   "objective": "Always pop field name and model type stacks during schema generation"
+  },
+  "pr": 13859,
+  "repo": "https://github.com/pydantic/pydantic",
+  "schema": 1,
+  "title": "Always pop field name and model type stacks during schema generation",
+  "urls": {
+   "base_commit": "https://github.com/pydantic/pydantic/commit/dae7e2065283db4d3d677ebae9d2dc8423131c62",
+   "compare": "https://github.com/pydantic/pydantic/compare/dae7e2065283db4d3d677ebae9d2dc8423131c62...afff1eb7040e568de521d05ebd8b8747f96ad9d9",
+   "merge_commit": "https://github.com/pydantic/pydantic/commit/afff1eb7040e568de521d05ebd8b8747f96ad9d9",
+   "pr": "https://github.com/pydantic/pydantic/pull/13859"
+  }
+ },
+ "ruling": {
+  "acceptance": [
+   "A schema build that raises and is caught leaves no stale entry on either stack",
+   "Subsequent Self annotations and handler.field_name resolve correctly after a failed build"
+  ],
+  "case_id": "pydantic-pr13859-pop-schema-stacks-in-finally",
+  "expected": [],
+  "objective": "Always pop the field name and model type stacks in schema generation, even when schema generation raises inside the with block",
+  "rationale": "Wraps two context-manager yields in try/finally with tests for the failed-build path described in issue #13857. Nothing referenced it afterwards.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "clean"
+ }
+}

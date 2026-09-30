@@ -1,0 +1,110 @@
+diff --git a/pydantic/_internal/_schema_gather.py b/pydantic/_internal/_schema_gather.py
+index 19a8db877..0e35d9915 100644
+--- a/pydantic/_internal/_schema_gather.py
++++ b/pydantic/_internal/_schema_gather.py
+@@ -64,6 +64,28 @@ class GatherContext:
+     (by setting the value to `None`).
+     """
+ 
++    visited: dict[int, tuple[int, int | None]] = field(init=False, default_factory=dict)
++    """A mapping between the traversed core schema IDs and their span in the `encountered_refs`.
++
++    Core schemas are stored (and thus shared) on successfully completed Pydantic models (and other
++    referenceable types), meaning the same core schema object can appear multiple times in the
++    traversed schema. Every schema object only needs to be traversed once: traversing per path
++    can result in exponential blowup with highly interconnected models (e.g. `Model3` references
++    `Model2` and `Model1`, while `Model2` also references `Model1`).
++
++    However, the `collected_references` bookkeeping is per encounter: seeing a reference a second
++    time (even through a shared schema object) means it can't be inlined. To preserve this without
++    re-traversing, the references encountered while traversing each schema (i.e. the schema's span
++    of the `encountered_refs`) are marked as non-inlinable when the schema is visited again.
++    A `None` end index means the schema is currently being traversed (in which case every reference
++    encountered since the start index is marked as non-inlinable. This happens when a
++    `'definition-ref'` schema object is reachable from the definition it points to, and inlining
++    would then create a cycle).
++    """
++
++    encountered_refs: list[str] = field(init=False, default_factory=list)
++    """A list of the definition references encountered during the traversal, used with `visited`."""
++
+ 
+ def traverse_metadata(schema: AllSchemas, ctx: GatherContext) -> None:
+     meta = schema.get('metadata')
+@@ -73,6 +95,7 @@ def traverse_metadata(schema: AllSchemas, ctx: GatherContext) -> None:
+ 
+ def traverse_definition_ref(def_ref_schema: DefinitionReferenceSchema, ctx: GatherContext) -> None:
+     schema_ref = def_ref_schema['schema_ref']
++    ctx.encountered_refs.append(schema_ref)
+ 
+     if schema_ref not in ctx.collected_references:
+         definition = ctx.definitions.get(schema_ref)
+@@ -93,6 +116,20 @@ def traverse_definition_ref(def_ref_schema: DefinitionReferenceSchema, ctx: Gath
+ 
+ 
+ def traverse_schema(schema: AllSchemas, context: GatherContext) -> None:
++    schema_id = id(schema)
++    span = context.visited.get(schema_id)
++    if span is not None:
++        # The schema object was already traversed (or is currently being traversed, in which case
++        # the end index is not set yet). Re-traversing per path can result in exponential blowup
++        # with highly interconnected models, so instead mark every definition reference encountered
++        # during its traversal as non-inlinable, as if they were encountered again:
++        start, end = span
++        for schema_ref in context.encountered_refs[start:end]:
++            context.collected_references[schema_ref] = None
++        return
++    start = len(context.encountered_refs)
++    context.visited[schema_id] = (start, None)
++
+     # TODO When we drop 3.9, use a match statement to get better type checking and remove
+     # file-level type ignore.
+     # (the `'type'` could also be fetched in every `if/elif` statement, but this alters performance).
+@@ -100,6 +137,7 @@ def traverse_schema(schema: AllSchemas, context: GatherContext) -> None:
+ 
+     if schema_type == 'definition-ref':
+         traverse_definition_ref(schema, context)
++        context.visited[schema_id] = (start, len(context.encountered_refs))
+         # `traverse_definition_ref` handles the possible serialization and metadata schemas:
+         return
+     elif schema_type == 'definitions':
+@@ -190,6 +228,8 @@ def traverse_schema(schema: AllSchemas, context: GatherContext) -> None:
+         traverse_schema(schema['serialization'], context)
+     traverse_metadata(schema, context)
+ 
++    context.visited[schema_id] = (start, len(context.encountered_refs))
++
+ 
+ def gather_schemas_for_cleaning(schema: CoreSchema, definitions: dict[str, CoreSchema]) -> GatherResult:
+     """Traverse the core schema and definitions and return the necessary information for schema cleaning.
+diff --git a/tests/test_edge_cases.py b/tests/test_edge_cases.py
+index df52288cc..3649fb3d7 100644
+--- a/tests/test_edge_cases.py
++++ b/tests/test_edge_cases.py
+@@ -44,6 +44,7 @@ from pydantic import (
+     TypeAdapter,
+     ValidationError,
+     constr,
++    create_model,
+     errors,
+     field_validator,
+     model_validator,
+@@ -3182,3 +3183,18 @@ def test_safe_get_annotations_from_dict() -> None:
+         pass
+ 
+     assert safe_get_annotations(Sub) == {}
++
++
++@pytest.mark.timeout(10)
++def test_interconnected_models_build_in_linear_time() -> None:
++    classes: list[type[BaseModel]] = []
++    for i in range(60):
++        fields: dict[str, Any] = {'value': (int, ...)}
++        for j, prev in enumerate(classes[-3:]):
++            fields[f'ref{j}'] = (prev | None, None)
++        classes.append(create_model(f'Node{i}', **fields))
++
++    last = classes[-1]
++    instance = last.model_validate({'value': 1, 'ref2': {'value': 2, 'ref2': {'value': 3}}})
++    assert instance.ref2.ref2.value == 3
++    assert instance.model_dump(exclude_none=True) == {'value': 1, 'ref2': {'value': 2, 'ref2': {'value': 3}}}

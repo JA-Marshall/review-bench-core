@@ -1,0 +1,7 @@
+{
+ "min_blocking_recall": 0.8,
+ "max_false_blocking_per_clean_case": 0.1,
+ "max_false_blocking_per_seeded_case": 0.5,
+ "min_compliance": 1.0,
+ "min_keyword_hits": 2
+}

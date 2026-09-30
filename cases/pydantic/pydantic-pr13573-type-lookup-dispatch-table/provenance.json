@@ -1,0 +1,143 @@
+{
+ "proposal": {
+  "base_sha": "79e15fab237a2fbf6a2cd2e5db984b503269940c",
+  "base_verified": true,
+  "commits": 8,
+  "evidence": {
+   "discussion": [
+    {
+     "body": "## Deploying pydantic-docs with &nbsp;<a href=\"https://pages.dev\"><img alt=\"Cloudflare Pages\" src=\"https://user-images.githubusercontent.com/23264/106598434-9e719e00-654f-11eb-9e59-6167043cfa01.png\" width=\"16\"></a> &nbsp;Cloudflare Pages\n\n<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>58c87b9</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;\u2705&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://177a4348.pydantic-docs.pages.dev'>https://177a4348.pydantic-docs.pages.dev</a>\n</td></tr>\n<tr><td><strong>Branch Preview URL [...]",
+     "created_at": "2026-08-03T11:07:24Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#issuecomment-5165542598"
+    },
+    {
+     "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **improve performance by 9.85%**\n\n<details>\n<summary>:warning: <b>Different runtime environments detected</b></summary>\n\n> Some benchmarks with significant performance changes were compared across different runtime environments,\n> which may affect the accuracy of the results.\n>\n> [Open the report in CodSpeed to investigate](https://app.codspeed.io/pydantic/pydantic/branches/vp%2Fmatch-type-refactor?utm_source=github&utm_medium=comment-v2&utm_content=comparison_issues)\n\n</details>\n\n`\u26a1 11` improved benchmarks  \n`\u2705 205` unto [...]",
+     "created_at": "2026-08-03T11:16:40Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#issuecomment-5165628866"
+    },
+    {
+     "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 96%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-96%25-orange.svg\"> <img title=\"93.25% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-93%25-orange.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\"6\">&nbs [...]",
+     "created_at": "2026-08-03T11:22:34Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#issuecomment-5165680804"
+    }
+   ],
+   "later_references": [
+    {
+     "body": "## Change Summary\n\nUnreleased regression from #13573 (\"Optimize type lookup logic in core schema generation\", b75fadb, 2026-08-03). That refactor moved the bare/unsubscripted type dispatch into `_types_handlers`, and bare `collections.abc.MutableSequence` \u2014 previously part of `LIST_TYPES` \u2014 ended up mapped to `self._sequence_schema(Any)` instead of `self._list_schema(Any)`.\n\n`_sequence_schema` builds an `is_instance_schema(typing.Sequence)`, so mutability is never checked and no coercion happens. On `main` today:\n\n```python\nfrom collections.abc import MutableSequence\nfrom pydantic import TypeA [...]",
+     "kind": "pull_request",
+     "number": 13690,
+     "referenced_at": "2026-08-20T10:35:31Z",
+     "state": "closed",
+     "title": "Use list schema for bare `collections.abc.MutableSequence`",
+     "url": "https://github.com/pydantic/pydantic/pull/13690"
+    }
+   ],
+   "linked_issues": [],
+   "review_comments": [
+    {
+     "body": "<!-- MURMUR_IGNORE -->\n\ud83d\udfe0 **High** `_internal/_generate_schema.py:378`\n\nA field annotated with bare `collections.abc.MutableSequence` now raises `PydanticSchemaGenerationError` instead of being treated as a list. The `_get_handlers` dict includes `collections.abc.MutableSet`, `collections.abc.Set`, and `collections.abc.Sequence`, but omits `collections.abc.MutableSequence`, so it falls through to the unknown-schema path. Consider adding `collections.abc.MutableSequence: lambda _: self._list_schema(Any)` alongside the other sequence/collection entries.\n\nNo longer relevant as of db6782a6f2363963a [...]",
+     "line": 378,
+     "path": "pydantic/_internal/_generate_schema.py",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#discussion_r3703364607"
+    },
+    {
+     "body": "\ud83d\udfe0 **High** `_internal/_generate_schema.py:348`\n\nThe `_handlers` dict changes type dispatch from identity comparison to hash/equality lookup. A custom class whose metaclass defines `__hash__` and `__eq__` to match a built-in key (e.g. comparing equal to `str`) will now silently select that built-in's handler \u2014 returning a string schema instead of falling through to arbitrary/custom-type schema generation. Previously, `is` checks ensured only the exact built-in type matched. Consider using a lookup that preserves identity semantics (e.g. `id`-keyed dict or an explicit `is` chain) rather than rel [...]",
+     "line": 347,
+     "path": "pydantic/_internal/_generate_schema.py",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#discussion_r3704003110"
+    },
+    {
+     "body": "Expected, such wizardry is out of scope.",
+     "line": 347,
+     "path": "pydantic/_internal/_generate_schema.py",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#discussion_r3704181628"
+    },
+    {
+     "body": "\ud83d\udfe0 **High** `pyproject.toml:83`\n\nOn the PyPy CI job, `uv sync` installs the `dev` dependency group but the marker `platform_python_implementation != \"PyPy\"` skips `time-machine`, so `tests/test_docs.py`'s unconditional `import time_machine` raises `ModuleNotFoundError` and the PyPy test run fails. Either guard the import/collection for PyPy or drop the marker so the dependency installs there.\n\n\n<details>\n<summary>\ud83d\ude80 Reply \"<strong>fix it for me</strong>\" or copy this <strong>AI Prompt</strong> for your agent:</summary>\n\n```text\nIn file @pyproject.toml around line 83:\n\nOn the PyPy CI job, `uv syn [...]",
+     "line": 83,
+     "path": "pyproject.toml",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#discussion_r3704188988"
+    },
+    {
+     "body": "Understood. Would you like me to open a separate PR against `main` to address this edge case by using an identity-based lookup (e.g., `id`-keyed dict)?",
+     "line": 347,
+     "path": "pydantic/_internal/_generate_schema.py",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#discussion_r3704192979"
+    },
+    {
+     "body": "As we now eagerly access `datetime.datetime` when building the type handlers, this mock pattern doesn't work anymore. It wasn't ever expected too, using `time-machine` is way cleaner.",
+     "line": 76,
+     "path": "tests/test_docs.py",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#discussion_r3705051024"
+    }
+   ],
+   "reviews": [
+    {
+     "body": "This is absolutely a good idea",
+     "state": "APPROVED",
+     "submitted_at": "2026-08-03T17:53:30Z",
+     "url": "https://github.com/pydantic/pydantic/pull/13573#pullrequestreview-4847130110"
+    }
+   ]
+  },
+  "excluded_files": [],
+  "files": [
+   "pydantic/_internal/_generate_schema.py",
+   "pydantic/_internal/_typing_extra.py",
+   "pyproject.toml",
+   "tests/test_docs.py",
+   "tests/test_typing.py",
+   "uv.lock"
+  ],
+  "has_tests": true,
+  "merge_sha": "b75fadbaa55d4d700a388f1b67683ef0be0ed540",
+  "merge_style": "squash",
+  "merged_at": "2026-08-03T18:37:04Z",
+  "packet": {
+   "acceptance_draft": [],
+   "body_excerpt": "This is a poor man's version of https://github.com/pydantic/pydantic/pull/12575, which does not introduce any new API for core schema generation, and instead focuses only on performance of core schema generation type dispatching.\n\nBy taking the proper steps at \"decomposing\" the arbitrary annotation passed to `generate_schema()`, we can avoid repeated calls to `get_origin()`, `typing._GenericAlias.__eq__()` (all the `obj` in `*_TYPES` calls), etc.\n\nCloses https://github.com/pydantic/pydantic/pull/13541 (better performance here, and better approach too).",
+   "objective": "Optimize type lookup logic in core schema generation"
+  },
+  "pr": 13573,
+  "repo": "https://github.com/pydantic/pydantic",
+  "schema": 1,
+  "title": "Optimize type lookup logic in core schema generation",
+  "urls": {
+   "base_commit": "https://github.com/pydantic/pydantic/commit/79e15fab237a2fbf6a2cd2e5db984b503269940c",
+   "compare": "https://github.com/pydantic/pydantic/compare/79e15fab237a2fbf6a2cd2e5db984b503269940c...b75fadbaa55d4d700a388f1b67683ef0be0ed540",
+   "merge_commit": "https://github.com/pydantic/pydantic/commit/b75fadbaa55d4d700a388f1b67683ef0be0ed540",
+   "pr": "https://github.com/pydantic/pydantic/pull/13573"
+  }
+ },
+ "ruling": {
+  "acceptance": [
+   "Every type the removed TYPES lists matched produces the same core schema as before",
+   "Bare and subscripted forms of each collection type dispatch to the handler they used before",
+   "Types not in the tables still reach the existing fallback paths"
+  ],
+  "case_id": "pydantic-pr13573-type-lookup-dispatch-table",
+  "expected": [
+   {
+    "description": "Bare collections.abc.MutableSequence used to be in LIST_TYPES and validate as a list; the new table maps it to _sequence_schema(Any), so a str passes validation unchanged and nothing is coerced to a list.",
+    "file": "pydantic/_internal/_generate_schema.py",
+    "id": "mutable-sequence-dispatch",
+    "keywords": [
+     "MutableSequence",
+     "_sequence_schema",
+     "_list_schema",
+     "LIST_TYPES",
+     "is_instance",
+     "coercion",
+     "bare",
+     "mutability"
+    ],
+    "severity": "blocking"
+   }
+  ],
+  "objective": "Replace the sequential type-list checks in core schema generation with dictionary dispatch on the bare type or origin, as an optimisation with no change in the schemas produced",
+  "rationale": "PR #13690, merged three weeks later, calls this an unreleased regression: bare collections.abc.MutableSequence was in LIST_TYPES and produced a list schema, and the new dispatch table maps it to _sequence_schema(Any), an is-instance check with no coercion and no mutability check. A review bot flagged the MutableSequence entry during review. The wrong mapping is on a line this diff adds.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "seeded"
+ }
+}

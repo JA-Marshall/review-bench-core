@@ -1,0 +1,716 @@
+diff --git a/pydantic/_internal/_generate_schema.py b/pydantic/_internal/_generate_schema.py
+index 003920f8f..3fba8dc3e 100644
+--- a/pydantic/_internal/_generate_schema.py
++++ b/pydantic/_internal/_generate_schema.py
+@@ -27,7 +27,7 @@ from types import FunctionType, GenericAlias, LambdaType, MethodType, NoneType
+ from typing import (
+     TYPE_CHECKING,
+     Any,
+-    Final,
++    ClassVar,
+     ForwardRef,
+     Literal,
+     TypeAlias,
+@@ -137,36 +137,6 @@ GetCoreSchemaFunction: TypeAlias = Callable[[Any, ModifyCoreSchemaWrapHandler],
+ ParametersCallback: TypeAlias = Callable[[int, str, Any], Literal['skip'] | None]
+ 
+ TUPLE_TYPES: list[type] = [typing.Tuple, tuple]  # noqa: UP006
+-LIST_TYPES: list[type] = [typing.List, list, collections.abc.MutableSequence]  # noqa: UP006
+-SET_TYPES: list[type] = [typing.Set, set, collections.abc.MutableSet]  # noqa: UP006
+-FROZEN_SET_TYPES: list[type] = [typing.FrozenSet, frozenset, collections.abc.Set]  # noqa: UP006
+-DICT_TYPES: list[type] = [typing.Dict, dict]  # noqa: UP006
+-IP_TYPES: list[type] = [IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network]
+-SEQUENCE_TYPES: list[type] = [typing.Sequence, collections.abc.Sequence]
+-ITERABLE_TYPES: list[type] = [typing.Iterable, collections.abc.Iterable, typing.Generator, collections.abc.Generator]
+-TYPE_TYPES: list[type] = [typing.Type, type]  # noqa: UP006
+-PATTERN_TYPES: list[type] = [typing.Pattern, re.Pattern]
+-PATH_TYPES: list[type] = [
+-    os.PathLike,
+-    pathlib.Path,
+-    pathlib.PurePath,
+-    pathlib.PosixPath,
+-    pathlib.WindowsPath,
+-    pathlib.PurePosixPath,
+-    pathlib.PureWindowsPath,
+-]
+-MAPPING_TYPES = [
+-    typing.Mapping,
+-    typing.MutableMapping,
+-    collections.abc.Mapping,
+-    collections.abc.MutableMapping,
+-    collections.OrderedDict,
+-    typing_extensions.OrderedDict,
+-    typing.DefaultDict,  # noqa: UP006
+-    collections.defaultdict,
+-]
+-COUNTER_TYPES = [collections.Counter, typing.Counter]
+-DEQUE_TYPES: list[type] = [collections.deque, typing.Deque]  # noqa: UP006
+ 
+ # Note: This does not play very well with type checkers. For example,
+ # `a: LambdaType = lambda x: x` will raise a type error by Pyright.
+@@ -372,6 +342,109 @@ class GenerateSchema:
+         self.model_type_stack = _ModelTypeStack()
+         self.defs = _Definitions()
+ 
++    # The handler lambdas take the `GenerateSchema` instance as their first argument, so that
++    # the dicts can be built once at class creation time and shared by all instances:
++    _handlers: ClassVar[dict[Any, Callable[[GenerateSchema, Any], core_schema.CoreSchema]]] = {
++        str: lambda self, obj: core_schema.str_schema(),
++        bytes: lambda self, obj: core_schema.bytes_schema(),
++        int: lambda self, obj: core_schema.int_schema(),
++        float: lambda self, obj: core_schema.float_schema(),
++        bool: lambda self, obj: core_schema.bool_schema(),
++        complex: lambda self, obj: core_schema.complex_schema(),
++        object: lambda self, obj: core_schema.any_schema(),
++        datetime.date: lambda self, obj: core_schema.date_schema(),
++        datetime.datetime: lambda self, obj: core_schema.datetime_schema(),
++        datetime.time: lambda self, obj: core_schema.time_schema(),
++        datetime.timedelta: lambda self, obj: core_schema.timedelta_schema(),
++        Decimal: lambda self, obj: core_schema.decimal_schema(),
++        UUID: lambda self, obj: core_schema.uuid_schema(),
++        Url: lambda self, obj: core_schema.url_schema(),
++        Fraction: lambda self, obj: core_schema.fraction_schema(),
++        MultiHostUrl: lambda self, obj: core_schema.multi_host_url_schema(),
++        None: lambda self, obj: core_schema.none_schema(),
++        NoneType: lambda self, obj: core_schema.none_schema(),
++        MISSING: lambda self, obj: core_schema.missing_sentinel_schema(),
++        type: lambda self, obj: self._type_schema(),
++        dict: lambda self, obj: self._dict_schema(Any, Any),
++        tuple: lambda self, obj: self._tuple_schema(obj),
++        list: lambda self, obj: self._list_schema(Any),
++        set: lambda self, obj: self._set_schema(Any),
++        collections.abc.MutableSet: lambda self, obj: self._set_schema(Any),
++        frozenset: lambda self, obj: self._frozenset_schema(Any),
++        collections.abc.Set: lambda self, obj: self._frozenset_schema(Any),
++        collections.abc.MutableSequence: lambda self, obj: self._sequence_schema(Any),
++        collections.abc.Sequence: lambda self, obj: self._sequence_schema(Any),
++        collections.deque: lambda self, obj: self._deque_schema(Any),
++        collections.abc.Iterable: lambda self, obj: self._iterable_schema(obj),
++        collections.abc.Generator: lambda self, obj: self._iterable_schema(obj),
++        collections.abc.Mapping: lambda self, obj: self._mapping_schema(obj, Any, Any),
++        collections.abc.MutableMapping: lambda self, obj: self._mapping_schema(obj, Any, Any),
++        collections.OrderedDict: lambda self, obj: self._mapping_schema(obj, Any, Any),
++        collections.defaultdict: lambda self, obj: self._mapping_schema(obj, Any, Any),
++        collections.Counter: lambda self, obj: self._mapping_schema(obj, Any, int),
++        collections.abc.Callable: lambda self, obj: core_schema.callable_schema(),
++        collections.abc.Hashable: lambda self, obj: self._hashable_schema(),
++        IPv4Address: lambda self, obj: self._ip_schema(obj),
++        IPv4Interface: lambda self, obj: self._ip_schema(obj),
++        IPv4Network: lambda self, obj: self._ip_schema(obj),
++        IPv6Address: lambda self, obj: self._ip_schema(obj),
++        IPv6Interface: lambda self, obj: self._ip_schema(obj),
++        IPv6Network: lambda self, obj: self._ip_schema(obj),
++        os.PathLike: lambda self, obj: self._path_schema(obj, Any),
++        pathlib.Path: lambda self, obj: self._path_schema(obj, Any),
++        pathlib.PurePath: lambda self, obj: self._path_schema(obj, Any),
++        pathlib.PosixPath: lambda self, obj: self._path_schema(obj, Any),
++        pathlib.WindowsPath: lambda self, obj: self._path_schema(obj, Any),
++        pathlib.PurePosixPath: lambda self, obj: self._path_schema(obj, Any),
++        pathlib.PureWindowsPath: lambda self, obj: self._path_schema(obj, Any),
++        re.Pattern: lambda self, obj: self._pattern_schema(obj),
++        ZoneInfo: lambda self, obj: self._zoneinfo_schema(),
++    }
++
++    _generic_handlers: ClassVar[dict[Any, Callable[[GenerateSchema, Any], core_schema.CoreSchema]]] = {
++        tuple: lambda self, obj: self._tuple_schema(obj),
++        list: lambda self, obj: self._list_schema(self._get_first_arg_or_any(obj)),
++        dict: lambda self, obj: self._dict_schema(*self._get_first_two_args_or_any(obj)),
++        set: lambda self, obj: self._set_schema(self._get_first_arg_or_any(obj)),
++        frozenset: lambda self, obj: self._frozenset_schema(self._get_first_arg_or_any(obj)),
++        type: lambda self, obj: self._subclass_schema(obj),
++        collections.abc.MutableSequence: lambda self, obj: self._list_schema(self._get_first_arg_or_any(obj)),
++        collections.abc.MutableSet: lambda self, obj: self._set_schema(self._get_first_arg_or_any(obj)),
++        collections.abc.Set: lambda self, obj: self._frozenset_schema(self._get_first_arg_or_any(obj)),
++        collections.deque: lambda self, obj: self._deque_schema(self._get_first_arg_or_any(obj)),
++        collections.abc.Mapping: lambda self, obj: self._mapping_schema(
++            collections.abc.Mapping, *self._get_first_two_args_or_any(obj)
++        ),
++        collections.abc.MutableMapping: lambda self, obj: self._mapping_schema(
++            collections.abc.MutableMapping, *self._get_first_two_args_or_any(obj)
++        ),
++        collections.OrderedDict: lambda self, obj: self._mapping_schema(
++            collections.OrderedDict, *self._get_first_two_args_or_any(obj)
++        ),
++        collections.defaultdict: lambda self, obj: self._mapping_schema(
++            collections.defaultdict, *self._get_first_two_args_or_any(obj)
++        ),
++        collections.Counter: lambda self, obj: self._mapping_schema(
++            collections.Counter, self._get_first_arg_or_any(obj), int
++        ),
++        os.PathLike: lambda self, obj: self._path_schema(os.PathLike, self._get_first_arg_or_any(obj)),
++        pathlib.Path: lambda self, obj: self._path_schema(pathlib.Path, self._get_first_arg_or_any(obj)),
++        pathlib.PurePath: lambda self, obj: self._path_schema(pathlib.PurePath, self._get_first_arg_or_any(obj)),
++        pathlib.PosixPath: lambda self, obj: self._path_schema(pathlib.PosixPath, self._get_first_arg_or_any(obj)),
++        pathlib.WindowsPath: lambda self, obj: self._path_schema(pathlib.WindowsPath, self._get_first_arg_or_any(obj)),
++        pathlib.PurePosixPath: lambda self, obj: self._path_schema(
++            pathlib.PurePosixPath, self._get_first_arg_or_any(obj)
++        ),
++        pathlib.PureWindowsPath: lambda self, obj: self._path_schema(
++            pathlib.PureWindowsPath, self._get_first_arg_or_any(obj)
++        ),
++        collections.abc.Sequence: lambda self, obj: self._sequence_schema(self._get_first_arg_or_any(obj)),
++        collections.abc.Iterable: lambda self, obj: self._iterable_schema(obj),
++        collections.abc.Generator: lambda self, obj: self._iterable_schema(obj),
++        re.Pattern: lambda self, obj: self._pattern_schema(obj),
++        collections.abc.Callable: lambda self, obj: core_schema.callable_schema(),
++    }
++
+     def __init_subclass__(cls) -> None:
+         super().__init_subclass__()
+         warnings.warn(
+@@ -804,7 +877,7 @@ class GenerateSchema:
+                 extras_keys_schema = None
+                 if core_config.get('extra_fields_behavior') == 'allow' and extra_info is not None:
+                     tp = get_origin(extra_info.annotation)
+-                    if tp not in DICT_TYPES:
++                    if tp is not dict:
+                         raise PydanticSchemaGenerationError(
+                             'The type annotation for `__pydantic_extra__` must be `dict[str, ...]`'
+                         )
+@@ -1000,9 +1073,17 @@ class GenerateSchema:
+         if typing_objects.is_self(obj):
+             obj = self._resolve_self_type(obj)
+ 
+-        if typing_objects.is_annotated(get_origin(obj)):
++        origin = get_origin(obj)
++
++        if is_union_origin(origin):
++            return self._union_schema(obj)
++
++        if typing_objects.is_annotated(origin):
+             return self._annotated_schema(obj)
+ 
++        if typing_objects.is_literal(origin):
++            return self._literal_schema(obj)
++
+         if isinstance(obj, dict):
+             # we assume this is already a valid schema
+             return obj  # type: ignore[return-value]
+@@ -1022,9 +1103,9 @@ class GenerateSchema:
+         if isinstance(obj, PydanticRecursiveRef):
+             return core_schema.definition_reference_schema(schema_ref=obj.type_ref)
+ 
+-        return self.match_type(obj)
++        return self.match_type(obj, origin)
+ 
+-    def match_type(self, obj: Any) -> core_schema.CoreSchema:  # noqa: C901
++    def match_type(self, obj: Any, origin: Any) -> core_schema.CoreSchema:  # noqa: C901
+         """Main mapping of types to schemas.
+ 
+         The general structure is a series of if statements starting with the simple cases
+@@ -1037,108 +1118,49 @@ class GenerateSchema:
+         The idea is that we'll evolve this into adding more and more user facing methods over time
+         as they get requested and we figure out what the right API for them is.
+         """
+-        if obj is str:
+-            return core_schema.str_schema()
+-        elif obj is bytes:
+-            return core_schema.bytes_schema()
+-        elif obj is int:
+-            return core_schema.int_schema()
+-        elif obj is float:
+-            return core_schema.float_schema()
+-        elif obj is bool:
+-            return core_schema.bool_schema()
+-        elif obj is complex:
+-            return core_schema.complex_schema()
+-        elif typing_objects.is_any(obj) or obj is object:
++        if typing_objects.is_any(obj) or typing_objects.is_final(obj):
++            # TODO: I'm not sure obj can be `Final` here, we call `typing_inspection.introspection.inspect_annotation()`
++            # early for model-like fields, which handles it already.
+             return core_schema.any_schema()
+-        elif obj is datetime.date:
+-            return core_schema.date_schema()
+-        elif obj is datetime.datetime:
+-            return core_schema.datetime_schema()
+-        elif obj is datetime.time:
+-            return core_schema.time_schema()
+-        elif obj is datetime.timedelta:
+-            return core_schema.timedelta_schema()
+-        elif obj is Decimal:
+-            return core_schema.decimal_schema()
+-        elif obj is UUID:
+-            return core_schema.uuid_schema()
+-        elif obj is Url:
+-            return core_schema.url_schema()
+-        elif obj is Fraction:
+-            return core_schema.fraction_schema()
+-        elif obj is MultiHostUrl:
+-            return core_schema.multi_host_url_schema()
+-        elif obj is None or obj is NoneType:
+-            return core_schema.none_schema()
+-        if obj is MISSING:
+-            return core_schema.missing_sentinel_schema()
+-        elif obj in IP_TYPES:
+-            return self._ip_schema(obj)
+-        elif obj in TUPLE_TYPES:
+-            return self._tuple_schema(obj)
+-        elif obj in LIST_TYPES:
+-            return self._list_schema(Any)
+-        elif obj in SET_TYPES:
+-            return self._set_schema(Any)
+-        elif obj in FROZEN_SET_TYPES:
+-            return self._frozenset_schema(Any)
+-        elif obj in SEQUENCE_TYPES:
+-            return self._sequence_schema(Any)
+-        elif obj in ITERABLE_TYPES:
+-            return self._iterable_schema(obj)
+-        elif obj in DICT_TYPES:
+-            return self._dict_schema(Any, Any)
+-        elif obj in PATH_TYPES:
+-            return self._path_schema(obj, Any)
+-        elif obj in DEQUE_TYPES:
+-            return self._deque_schema(Any)
+-        elif obj in MAPPING_TYPES:
+-            return self._mapping_schema(obj, Any, Any)
+-        elif obj in COUNTER_TYPES:
+-            return self._mapping_schema(obj, Any, int)
+-        elif typing_objects.is_typealiastype(obj):
+-            return self._type_alias_type_schema(obj)
+-        elif obj is type:
+-            return self._type_schema()
+-        elif _typing_extra.is_callable(obj):
+-            return core_schema.callable_schema()
+-        elif typing_objects.is_literal(get_origin(obj)):
+-            return self._literal_schema(obj)
+-        elif is_typeddict(obj):
+-            return self._typed_dict_schema(obj, None)
+-        elif inspect.isclass(obj) and issubclass(obj, Enum):
+-            # NOTE: this must come before the `is_namedtuple()` check as enums values
+-            # can be namedtuples:
+-            return self._enum_schema(obj)
+-        elif _typing_extra.is_namedtuple(obj):
+-            return self._namedtuple_schema(obj, None)
+-        elif typing_objects.is_newtype(obj):
+-            # NewType, can't use isinstance because it fails <3.10
+-            return self.generate_schema(obj.__supertype__)
+-        elif obj in PATTERN_TYPES:
+-            return self._pattern_schema(obj)
+-        elif _typing_extra.is_hashable(obj):
+-            return self._hashable_schema()
+-        elif isinstance(obj, typing.TypeVar):
+-            return self._unsubstituted_typevar_schema(obj)
+-        elif _typing_extra.is_finalvar(obj):
+-            if obj is Final:
+-                return core_schema.any_schema()
+-            return self.generate_schema(
+-                self._get_first_arg_or_any(obj),
+-            )
+-        elif isinstance(obj, VALIDATE_CALL_SUPPORTED_TYPES):
+-            return self._call_schema(obj)  # pyright: ignore[reportArgumentType]
+-        elif obj is ZoneInfo:
+-            return self._zoneinfo_schema()
+ 
+-        # dataclasses.is_dataclass coerces dc instances to types, but we only handle
+-        # the case of a dc type here
+-        if dataclasses.is_dataclass(obj):
+-            return self._dataclass_schema(obj, None)  # pyright: ignore[reportArgumentType]
++        if origin is not None and (aliased_obj := typing_objects.DEPRECATED_ALIASES.get(obj)):
++            # See https://typing-inspection.pydantic.dev/dev/usage/#inspecting-the-type-expression:
++            obj = aliased_obj
++            origin = None
++
++        if origin is None:
++            # Thanks to the checks before this point, no origin means `obj` is a
++            # simple type (not a generic alias, a union, an `Annotated` form).
++            # examples: int, str, list, dict, collections.abc.Mapping, a `TypeAliasType` instance.
++            try:
++                handler = self._handlers.get(obj)
++            except TypeError:
++                pass
++            else:
++                if handler is not None:
++                    return handler(self, obj)
++
++            if typing_objects.is_typealiastype(obj):
++                return self._type_alias_type_schema(obj)
++            elif is_typeddict(obj):
++                return self._typed_dict_schema(obj, None)
++            elif inspect.isclass(obj) and issubclass(obj, Enum):
++                # NOTE: this must come before the `is_namedtuple()` check as enums values
++                # can be namedtuples:
++                return self._enum_schema(obj)
++            elif _typing_extra.is_namedtuple(obj):
++                return self._namedtuple_schema(obj, None)
++            elif typing_objects.is_newtype(obj):
++                return self.generate_schema(obj.__supertype__)
++            elif isinstance(obj, typing.TypeVar):
++                return self._unsubstituted_typevar_schema(obj)
++            elif isinstance(obj, VALIDATE_CALL_SUPPORTED_TYPES):
++                return self._call_schema(obj)  # pyright: ignore[reportArgumentType]
++            # dataclasses.is_dataclass coerces dc instances to types, but we only handle
++            # the case of a dc type here
++            elif dataclasses.is_dataclass(obj):
++                return self._dataclass_schema(obj, None)  # pyright: ignore[reportArgumentType]
+ 
+-        origin = get_origin(obj)
+         if origin is not None:
+             return self._match_generic_type(obj, origin)
+ 
+@@ -1153,45 +1175,29 @@ class GenerateSchema:
+         # to resolve by modifying the value returned by `Generic.__class_getitem__`, but that is a dangerous game.
+         if dataclasses.is_dataclass(origin):
+             return self._dataclass_schema(obj, origin)  # pyright: ignore[reportArgumentType]
+-        if _typing_extra.is_namedtuple(origin):
++        elif _typing_extra.is_namedtuple(origin):
+             return self._namedtuple_schema(obj, origin)
++        elif typing_objects.is_final(origin):
++            # TODO: I'm not sure obj can be `Final` here, we call `typing_inspection.introspection.inspect_annotation()`
++            # early for model-like fields, which handles it already.
++            return self.generate_schema(self._get_first_arg_or_any(obj))
+ 
+         schema = self._generate_schema_from_get_schema_method(origin, obj)
+         if schema is not None:
+             return schema
+ 
++        try:
++            handler = self._generic_handlers.get(origin)
++        except TypeError:
++            pass
++        else:
++            if handler is not None:
++                return handler(self, obj)
++
+         if typing_objects.is_typealiastype(origin):
+             return self._type_alias_type_schema(obj)
+-        elif is_union_origin(origin):
+-            return self._union_schema(obj)
+-        elif origin in TUPLE_TYPES:
+-            return self._tuple_schema(obj)
+-        elif origin in LIST_TYPES:
+-            return self._list_schema(self._get_first_arg_or_any(obj))
+-        elif origin in SET_TYPES:
+-            return self._set_schema(self._get_first_arg_or_any(obj))
+-        elif origin in FROZEN_SET_TYPES:
+-            return self._frozenset_schema(self._get_first_arg_or_any(obj))
+-        elif origin in DICT_TYPES:
+-            return self._dict_schema(*self._get_first_two_args_or_any(obj))
+-        elif origin in PATH_TYPES:
+-            return self._path_schema(origin, self._get_first_arg_or_any(obj))
+-        elif origin in DEQUE_TYPES:
+-            return self._deque_schema(self._get_first_arg_or_any(obj))
+-        elif origin in MAPPING_TYPES:
+-            return self._mapping_schema(origin, *self._get_first_two_args_or_any(obj))
+-        elif origin in COUNTER_TYPES:
+-            return self._mapping_schema(origin, self._get_first_arg_or_any(obj), int)
+         elif is_typeddict(origin):
+             return self._typed_dict_schema(obj, origin)
+-        elif origin in TYPE_TYPES:
+-            return self._subclass_schema(obj)
+-        elif origin in SEQUENCE_TYPES:
+-            return self._sequence_schema(self._get_first_arg_or_any(obj))
+-        elif origin in ITERABLE_TYPES:
+-            return self._iterable_schema(obj)
+-        elif origin in PATTERN_TYPES:
+-            return self._pattern_schema(obj)
+ 
+         if self._arbitrary_types:
+             return self._arbitrary_type_schema(origin)
+diff --git a/pydantic/_internal/_typing_extra.py b/pydantic/_internal/_typing_extra.py
+index d68c792af..b28c7ef85 100644
+--- a/pydantic/_internal/_typing_extra.py
++++ b/pydantic/_internal/_typing_extra.py
+@@ -2,7 +2,6 @@
+ 
+ from __future__ import annotations
+ 
+-import collections.abc
+ import re
+ import sys
+ import types
+@@ -61,36 +60,6 @@ def unpack_type(tp: Any, /) -> Any | None:
+     return get_args(tp)[0] if typing_objects.is_unpack(get_origin(tp)) else None
+ 
+ 
+-def is_hashable(tp: Any, /) -> bool:
+-    """Return whether the provided argument is the `Hashable` class.
+-
+-    ```python {test="skip" lint="skip"}
+-    is_hashable(Hashable)
+-    #> True
+-    ```
+-    """
+-    # `get_origin` is documented as normalizing any typing-module aliases to `collections` classes,
+-    # hence the second check:
+-    return tp is collections.abc.Hashable or get_origin(tp) is collections.abc.Hashable
+-
+-
+-def is_callable(tp: Any, /) -> bool:
+-    """Return whether the provided argument is a `Callable`, parametrized or not.
+-
+-    ```python {test="skip" lint="skip"}
+-    is_callable(Callable[[int], str])
+-    #> True
+-    is_callable(typing.Callable)
+-    #> True
+-    is_callable(collections.abc.Callable)
+-    #> True
+-    ```
+-    """
+-    # `get_origin` is documented as normalizing any typing-module aliases to `collections` classes,
+-    # hence the second check:
+-    return tp is collections.abc.Callable or get_origin(tp) is collections.abc.Callable
+-
+-
+ _classvar_re = re.compile(r'((\w+\.)?Annotated\[)?(\w+\.)?ClassVar\[')
+ 
+ 
+@@ -132,46 +101,6 @@ def is_classvar_annotation(tp: Any, /) -> bool:
+     return False
+ 
+ 
+-_t_final = typing.Final
+-_te_final = typing_extensions.Final
+-
+-
+-# TODO implement `is_finalvar_annotation` as Final can be wrapped with other special forms:
+-def is_finalvar(tp: Any, /) -> bool:
+-    """Return whether the provided argument is a `Final` special form, parametrized or not.
+-
+-    ```python {test="skip" lint="skip"}
+-    is_finalvar(Final[int])
+-    #> True
+-    is_finalvar(Final)
+-    #> True
+-    """
+-    # Final is not necessarily parametrized:
+-    if tp is _t_final or tp is _te_final:
+-        return True
+-    origin = get_origin(tp)
+-    return origin is _t_final or origin is _te_final
+-
+-
+-_NONE_TYPES: tuple[Any, ...] = (None, NoneType, typing.Literal[None], typing_extensions.Literal[None])
+-
+-
+-def is_none_type(tp: Any, /) -> bool:
+-    """Return whether the argument represents the `None` type as part of an annotation.
+-
+-    ```python {test="skip" lint="skip"}
+-    is_none_type(None)
+-    #> True
+-    is_none_type(NoneType)
+-    #> True
+-    is_none_type(Literal[None])
+-    #> True
+-    is_none_type(type[None])
+-    #> False
+-    """
+-    return tp in _NONE_TYPES
+-
+-
+ def is_namedtuple(tp: Any, /) -> bool:
+     """Return whether the provided argument is a named tuple class.
+ 
+diff --git a/pyproject.toml b/pyproject.toml
+index 8271997ab..6e5290a65 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -80,6 +80,7 @@ dev = [
+     'pytest-run-parallel>=0.3.1',
+     'packaging',
+     'jsonschema',
++    'time-machine; platform_python_implementation != "PyPy"',
+ ]
+ coverage = [
+     'coverage[toml]',
+diff --git a/tests/test_docs.py b/tests/test_docs.py
+index ac988769c..7c185657e 100644
+--- a/tests/test_docs.py
++++ b/tests/test_docs.py
+@@ -15,11 +15,12 @@ from pydantic_core import core_schema
+ 
+ from pydantic.errors import PydanticErrorCodes
+ 
+-if sys.platform != 'emscripten':
++if sys.platform != 'emscripten' and platform.python_implementation() != 'PyPy':
++    import time_machine
+     from pytest_examples import CodeExample, EvalExample, find_examples
+ else:
+-    # pytest_examples is not installed on emscripten
+-    CodeExample = EvalExample = None
++    # pytest_examples and time_machine are not installed on emscripten
++    CodeExample = EvalExample = time_machine = None
+ 
+     def find_examples(*args, **kwargs):
+         return []
+@@ -73,12 +74,6 @@ class GroupModuleGlobals:
+ group_globals = GroupModuleGlobals()
+ 
+ 
+-class MockedDatetime(datetime):
+-    @classmethod
+-    def now(cls, *args, tz=None, **kwargs):
+-        return datetime(2032, 1, 2, 3, 4, 5, 6, tzinfo=tz)
+-
+-
+ skip_reason = skip_docs_tests()
+ LINE_LENGTH = 80
+ TARGET_VERSION = 'py310'
+@@ -142,7 +137,6 @@ def run_example(example: CodeExample, eval_example: EvalExample, mocker: Any) ->
+     group_name = prefix_settings.get('group')
+     d = group_globals.get(group_name)
+ 
+-    mocker.patch('datetime.datetime', MockedDatetime)
+     mocker.patch('random.randint', return_value=3)
+ 
+     xfail = None
+@@ -152,12 +146,14 @@ def run_example(example: CodeExample, eval_example: EvalExample, mocker: Any) ->
+     rewrite_assertions = prefix_settings.get('rewrite_assert', 'true') == 'true'
+ 
+     try:
+-        if test_settings == 'no-print-intercept':
+-            d2 = eval_example.run(example, module_globals=d, rewrite_assertions=rewrite_assertions)
+-        elif eval_example.update_examples:
+-            d2 = eval_example.run_print_update(example, module_globals=d, rewrite_assertions=rewrite_assertions)
+-        else:
+-            d2 = eval_example.run_print_check(example, module_globals=d, rewrite_assertions=rewrite_assertions)
++        # Freeze the local wall-clock time so examples calling `datetime.now()` are deterministic:
++        with time_machine.travel(datetime(2032, 1, 2, 3, 4, 5, 6).astimezone(), tick=False):
++            if test_settings == 'no-print-intercept':
++                d2 = eval_example.run(example, module_globals=d, rewrite_assertions=rewrite_assertions)
++            elif eval_example.update_examples:
++                d2 = eval_example.run_print_update(example, module_globals=d, rewrite_assertions=rewrite_assertions)
++            else:
++                d2 = eval_example.run_print_check(example, module_globals=d, rewrite_assertions=rewrite_assertions)
+     except BaseException as e:  # run_print_check raises a BaseException
+         if xfail:
+             pytest.xfail(f'{xfail}, {type(e).__name__}: {e}')
+diff --git a/tests/test_typing.py b/tests/test_typing.py
+index 9241af626..75e4b2940 100644
+--- a/tests/test_typing.py
++++ b/tests/test_typing.py
+@@ -1,6 +1,5 @@
+ from collections import namedtuple
+-from collections.abc import Callable
+-from typing import Annotated, ClassVar, ForwardRef, Literal, NamedTuple
++from typing import Annotated, ClassVar, ForwardRef, NamedTuple
+ 
+ import pytest
+ 
+@@ -10,7 +9,6 @@ from pydantic._internal._typing_extra import (
+     get_function_type_hints,
+     is_classvar_annotation,
+     is_namedtuple,
+-    is_none_type,
+     parent_frame_namespace,
+ )
+ 
+@@ -43,18 +41,6 @@ def test_is_namedtuple():
+     assert is_namedtuple(Other) is False
+ 
+ 
+-def test_is_none_type():
+-    assert is_none_type(Literal[None]) is True
+-    assert is_none_type(None) is True
+-    assert is_none_type(type(None)) is True
+-    assert is_none_type(6) is False
+-    assert is_none_type({}) is False
+-    # WARNING: It's important to test `typing.Callable` not
+-    # `collections.abc.Callable` (even with python >= 3.9) as they behave
+-    # differently
+-    assert is_none_type(Callable) is False
+-
+-
+ @pytest.mark.parametrize(
+     ['ann_type', 'expected'],
+     (
+diff --git a/uv.lock b/uv.lock
+index fc88a345c..c66729426 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -2457,6 +2457,7 @@ all = [
+     { name = "requests" },
+     { name = "ruff" },
+     { name = "sqlalchemy" },
++    { name = "time-machine", marker = "platform_python_implementation != 'PyPy'" },
+     { name = "tomli" },
+     { name = "twine" },
+ ]
+@@ -2481,6 +2482,7 @@ dev = [
+     { name = "pytest-pretty" },
+     { name = "pytest-run-parallel" },
+     { name = "pytz" },
++    { name = "time-machine", marker = "platform_python_implementation != 'PyPy'" },
+ ]
+ docs = [
+     { name = "autoflake" },
+@@ -2579,6 +2581,7 @@ all = [
+     { name = "requests" },
+     { name = "ruff" },
+     { name = "sqlalchemy" },
++    { name = "time-machine", marker = "platform_python_implementation != 'PyPy'" },
+     { name = "tomli" },
+     { name = "twine" },
+ ]
+@@ -2601,6 +2604,7 @@ dev = [
+     { name = "pytest-pretty" },
+     { name = "pytest-run-parallel", specifier = ">=0.3.1" },
+     { name = "pytz" },
++    { name = "time-machine", marker = "platform_python_implementation != 'PyPy'" },
+ ]
+ docs = [
+     { name = "autoflake" },
+@@ -3765,6 +3769,62 @@ wheels = [
+     { url = "https://files.pythonhosted.org/packages/ac/bb/5fb6656c625019cd653d5215237d7cd6e0b12e7eae4195c3d1c91b2136fc/textual-1.0.0-py3-none-any.whl", hash = "sha256:2d4a701781c05104925e463ae370c630567c70c2880e92ab838052e3e23c986f", size = 660456, upload-time = "2024-12-12T10:42:00.375Z" },
+ ]
+ 
++[[package]]
++name = "time-machine"
++version = "3.3.0"
++source = { registry = "https://pypi.org/simple" }
++sdist = { url = "https://files.pythonhosted.org/packages/0f/c9/3c6e1f9a93138847ad7c4f37660e695fbaf25ae6d0f11b7ba54033623b25/time_machine-3.3.0.tar.gz", hash = "sha256:2ddaea5ad047845e07c2275bc31740f3f63f9e79ce9917dd10b23444b1fc2fbf", size = 18929, upload-time = "2026-07-31T22:02:48.098Z" }
++wheels = [
++    { url = "https://files.pythonhosted.org/packages/b4/93/3c6a788c903c6394bdb7864f71540114cba4d845c329af5b1e57e99a49af/time_machine-3.3.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9e00bf089dd45ac94143073891bfb03ff23ff6b76a281fd2ab28a71b428e5a6f", size = 18615, upload-time = "2026-07-31T22:01:56.893Z" },
++    { url = "https://files.pythonhosted.org/packages/d7/0e/c989ba014bb389657a736124774d35c89c774ddf2263a4a15cd23ff5aec8/time_machine-3.3.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:e50dc8e073ab669665df838247e4027d4cf9694f01b983da6f77c00531d122a1", size = 19004, upload-time = "2026-07-31T22:01:58.285Z" },
++    { url = "https://files.pythonhosted.org/packages/48/a3/fa782b8746390ef405c9bb22535cd46e3cd1182af12dfdf7650bf7032714/time_machine-3.3.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:ade728b617a01734aee88cbeb155904718d0e1dd77fa657d8881d0e39b85b0b2", size = 44869, upload-time = "2026-07-31T22:01:59.533Z" },
++    { url = "https://files.pythonhosted.org/packages/26/c5/b7aab1aa1cf263cb6f6921f97324876801e0f1c91337901d0946b3a5dad2/time_machine-3.3.0-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b45ad433823ad69de7b1d517e9e37eff2931ba6dc65e5fac5d53f412e964c9a2", size = 46330, upload-time = "2026-07-31T22:02:00.713Z" },
++    { url = "https://files.pythonhosted.org/packages/25/d7/087a3f6e0d35e70584546b2013b7cbf46561bdb0308d0806ad4310ca094d/time_machine-3.3.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:9073e6f70103da6aa5cbc01bdcc17d42c9b00767a0706bc1212ed35f69b8198c", size = 45248, upload-time = "2026-07-31T22:02:01.858Z" },
++    { url = "https://files.pythonhosted.org/packages/72/0f/29f82d616e74681cb7504f94c472f3501fe92e9d621b06f3d9b3bd523fdd/time_machine-3.3.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:7a520de01526e96a06f84f6fa333bd63e077ea651158df4867b3965ce32b5fd1", size = 44428, upload-time = "2026-07-31T22:02:02.882Z" },
++    { url = "https://files.pythonhosted.org/packages/55/dd/3883ad16061063796a93d46e7e581dd35dab40fdef3fdd2acd7802713162/time_machine-3.3.0-cp310-cp310-win_amd64.whl", hash = "sha256:85fb03acb7718b76f53b45819758f62046ac3dbc2dfbc18276820d15784f0132", size = 20969, upload-time = "2026-07-31T22:02:03.896Z" },
++    { url = "https://files.pythonhosted.org/packages/02/ee/8f6d4488909aba520cfd130f2cab26a4d3c12ea98f567b68ee596a5b70ce/time_machine-3.3.0-cp310-cp310-win_arm64.whl", hash = "sha256:be1e8bc8f006298a9237c9db5138c18c8cd113beee98ff4b8945b01d15a9216d", size = 20081, upload-time = "2026-07-31T22:02:04.976Z" },
++    { url = "https://files.pythonhosted.org/packages/6c/51/fd7d1f7aae3b343870a3ae992cd263eeb066504a4d178b407f1a7de0fd77/time_machine-3.3.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:837ed88d6e8d875252bd088e2f5d8c1c8d64f95858fc8828717ff040115cd5da", size = 18615, upload-time = "2026-07-31T22:02:05.927Z" },
++    { url = "https://files.pythonhosted.org/packages/ae/dd/0ac5b3bb97f657ed6010f3da6393d6cea8a4a06a3b7a14542fc96221d854/time_machine-3.3.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:f426209c10af9f6e7b638ae0ccbd5fe20660d057614b765332ff7140eb1ac4a6", size = 19007, upload-time = "2026-07-31T22:02:06.866Z" },
++    { url = "https://files.pythonhosted.org/packages/ae/51/11e0681908a272e9b6103478964fce5dc1e5f5b61e1afbcb3f3b6805e834/time_machine-3.3.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:6a88f0e02cae81c769fb38c6660348f9790243945e012db3e62841b3e7841429", size = 45620, upload-time = "2026-07-31T22:02:07.808Z" },
++    { url = "https://files.pythonhosted.org/packages/06/ab/65270919578d9a93c9900e9aacf383f2c7f5b4f3c9886de6b9c46cdb3552/time_machine-3.3.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f8f7f34458b7487d994a5492109f583f59435f7a0f071c90c6b018745e4208b3", size = 47167, upload-time = "2026-07-31T22:02:09.001Z" },
++    { url = "https://files.pythonhosted.org/packages/cb/1e/747eb60c7323b9c64cbe219bc35fa66bdc19f4244ca907b5589c95c8b9d0/time_machine-3.3.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:c3bbaa43b1dfd2465a783b121ee3be65028576e50c051e7127cba13f48550cd4", size = 46044, upload-time = "2026-07-31T22:02:10.097Z" },
++    { url = "https://files.pythonhosted.org/packages/ed/92/3bfd702bb1e7fe6ed6c33d8dd108d958c29bcaed9f1a861e916ee04f7e78/time_machine-3.3.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:9395669b0b802184f4acb6875c7151ffced34747854e97140feeacf1962ab4aa", size = 45175, upload-time = "2026-07-31T22:02:11.17Z" },
++    { url = "https://files.pythonhosted.org/packages/95/07/0caa7973520fdf573b738c9e134cda4bf16a37434d6d6d9a438278a565be/time_machine-3.3.0-cp311-cp311-win_amd64.whl", hash = "sha256:4c2f81c22b7f3d230eecd190a285ff7941a976dd8c0a78575bf33a2e1830f0fa", size = 20966, upload-time = "2026-07-31T22:02:12.185Z" },
++    { url = "https://files.pythonhosted.org/packages/5d/b5/8bf4225d6178cc4892f394e439ac6d0de31369ac9503ad254136bd98d696/time_machine-3.3.0-cp311-cp311-win_arm64.whl", hash = "sha256:7f493cf224576fc4de15e5702c62081efae82052e8ee02d7db48e0d4b4e94ae3", size = 20077, upload-time = "2026-07-31T22:02:13.295Z" },
++    { url = "https://files.pythonhosted.org/packages/62/08/16aa3184f23d12fe853b9171b48001faea80985c919d1fc0570fbe6db66a/time_machine-3.3.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:5e49ca59e730cd08b61a6b924c2ec063d7b8c1b336246af552ab2d989df5a512", size = 18909, upload-time = "2026-07-31T22:02:14.651Z" },
++    { url = "https://files.pythonhosted.org/packages/10/48/9366737c44a642ebf766af1cd84b4f0edac1575db7589a2b4656108adaf2/time_machine-3.3.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:b66eb5c612e2728a9d8f75dcf3e78d392d290951685d2dffde4f0a4821d39294", size = 19135, upload-time = "2026-07-31T22:02:15.579Z" },
++    { url = "https://files.pythonhosted.org/packages/4a/80/acf35f5b3f4d53f8ca7bd2099e495793c9d8b5bd17702e6c8778983a6d02/time_machine-3.3.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:9982109c162f45ed7846a0435e235b6e1e9b695e33546eb534ae907ae0e68071", size = 49354, upload-time = "2026-07-31T22:02:16.564Z" },
++    { url = "https://files.pythonhosted.org/packages/39/c7/270bc4021215f927cc388b51eed414fb338520b9bf0f873c3ffb6c32e16d/time_machine-3.3.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c3df379cdd19d7ccfe8d80a800c3ef738d99be7484197bb364066ce496d6c14c", size = 50387, upload-time = "2026-07-31T22:02:17.817Z" },
++    { url = "https://files.pythonhosted.org/packages/60/ea/019df7a9f910c0af07b4c875bc1043ac7296a00e2d0886224cf88de4eebe/time_machine-3.3.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:03c64b892076802f6163b8a5e7560b90d2c501759a40f4d1af7ff2f911fe032c", size = 49129, upload-time = "2026-07-31T22:02:18.799Z" },
++    { url = "https://files.pythonhosted.org/packages/ab/d8/ceb82c9cd7150f4f68202680f78939c8b281aa654d8cf005b6b4980276ad/time_machine-3.3.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:5756edd25b36379d593b734f5a5f36ff27ac2f12bfea07ffc5f8ddacaca23d02", size = 48443, upload-time = "2026-07-31T22:02:19.811Z" },
++    { url = "https://files.pythonhosted.org/packages/3d/a7/7fbb3049126f064f662a6da4f85d0fb81f53e19f9bb891ee7e89a681ac25/time_machine-3.3.0-cp312-cp312-win_amd64.whl", hash = "sha256:80e8ad74c487eeb118ab0d4636ed6b9c9aded1422d0c05b989b6aaece54a7227", size = 21078, upload-time = "2026-07-31T22:02:20.786Z" },
++    { url = "https://files.pythonhosted.org/packages/fb/29/fe4e2d75178c8b17021ee2976f895462503aeef698386cf9a9b4279e0b7a/time_machine-3.3.0-cp312-cp312-win_arm64.whl", hash = "sha256:9bde203b188b393d441f9c0df28805d828cd4a2bb5d1bc476d200f2a3356e203", size = 20239, upload-time = "2026-07-31T22:02:21.712Z" },
++    { url = "https://files.pythonhosted.org/packages/5f/3b/64cf984b27fb8dc89aa54b79398e16988438d303da8ddbff112b2457d73e/time_machine-3.3.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:85671126bf22ee251a8d280af209a513839eeaaaf266c48f43b5e30351c8a450", size = 18907, upload-time = "2026-07-31T22:02:22.66Z" },
++    { url = "https://files.pythonhosted.org/packages/ce/ff/d3306381fc347814d01d70f0b4f2593872b4036602919f64b670159bb52c/time_machine-3.3.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:f8bc8f29a4fe0fc2fbb34cc07808e98826a21ca5c772479ab1ac9423efc0191f", size = 19119, upload-time = "2026-07-31T22:02:23.876Z" },
++    { url = "https://files.pythonhosted.org/packages/d3/ce/b811bd28d649c6f4dc3249b9814a0eb4e6db7ee9baff379a74e4fe782e86/time_machine-3.3.0-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:ee9686ca6f51a1c89c4373b685e41f6e8f421c2a7c11f59c4167b5f3e9f02a69", size = 49276, upload-time = "2026-07-31T22:02:24.839Z" },
++    { url = "https://files.pythonhosted.org/packages/9d/08/8c7777b95359da475e55f4fe4c1e48fe55e01d8242cc6b52cc94c8ff7842/time_machine-3.3.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:d227413d99884c7cf440225bb18aa9ab57f7cdf474bb5fafd24754c88ff45b26", size = 50268, upload-time = "2026-07-31T22:02:25.893Z" },
++    { url = "https://files.pythonhosted.org/packages/e7/e0/f19d2c09f18415a2ba10a60ed34c273bb226ada85e88c9c5e4c9656234d4/time_machine-3.3.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:d04dd82d88e28c31eac862e02d58e2b1e171065b2865ea084c9a31132d65b76c", size = 49049, upload-time = "2026-07-31T22:02:27.032Z" },
++    { url = "https://files.pythonhosted.org/packages/2a/3b/d0c5f204d8dd8b4ede1f101426c81415178738723a15d1a0308868c8f1b0/time_machine-3.3.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:933d39f68f739d656abec94ba55d78c79d6d9c4b7076f864e497fdcf25f39c6f", size = 48388, upload-time = "2026-07-31T22:02:28.234Z" },
++    { url = "https://files.pythonhosted.org/packages/dc/22/74ee8c153471c2cc8c0768b77819ce0f14c17f10f364d573182734d932d6/time_machine-3.3.0-cp313-cp313-win_amd64.whl", hash = "sha256:6cedd5fabaf921ada549d669301ca2cd1a6dc62464d266c4e8bfc252566d246d", size = 21074, upload-time = "2026-07-31T22:02:29.29Z" },
++    { url = "https://files.pythonhosted.org/packages/bd/2e/a9be4f9d77475af23657295213c0043454ed9b31da9b81caca27e2add821/time_machine-3.3.0-cp313-cp313-win_arm64.whl", hash = "sha256:c0143c3983bc55c1a9a47758da97c0bcc1e349dc360b3bfcf56cf896826acd81", size = 20239, upload-time = "2026-07-31T22:02:30.35Z" },
++    { url = "https://files.pythonhosted.org/packages/59/74/31d3d349bb9a82536dab6e2b0f227f35c44847e97be2b68599a4c062e2a5/time_machine-3.3.0-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:b4b48ad1aab0adc6391004939920677ca2b6c79a43959b204b621075abf856d1", size = 18983, upload-time = "2026-07-31T22:02:31.315Z" },
++    { url = "https://files.pythonhosted.org/packages/70/22/485a7db9e0853560628587d568f6704ebb1b5dec76cfcf1e1cc3e016bb40/time_machine-3.3.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:dcd7140ebf6ae279541e5e3a46973e5bb8e12cc666ef6a8e8e3b06ffb51094d1", size = 19190, upload-time = "2026-07-31T22:02:32.293Z" },
++    { url = "https://files.pythonhosted.org/packages/89/ce/9cfbbfd75570c8379c835959edff6200ae13198a2fd8b1291c2fd17c3717/time_machine-3.3.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:5d9137ba90350a8ef9554e2e3b0380153318de99fb4e6cebaa57a19f77b26d2a", size = 49415, upload-time = "2026-07-31T22:02:33.302Z" },
++    { url = "https://files.pythonhosted.org/packages/55/ef/19d08c4ca0262edbfc3d5338203d2e21256ef9f46d2f0950e166f9956c13/time_machine-3.3.0-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:eca0a0e2067d3236f3dd76a28c33f683da68fc6547448ac25a72a04751dd8605", size = 50342, upload-time = "2026-07-31T22:02:34.338Z" },
++    { url = "https://files.pythonhosted.org/packages/9d/c4/9d76772122aa49e5837f0257230198d1d07cd527c8e820ff1e6f14d066a9/time_machine-3.3.0-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:c07d598cb208706d51286afe20627f800c34686dc0ce128e7354a8419d66b9f3", size = 49116, upload-time = "2026-07-31T22:02:35.527Z" },
++    { url = "https://files.pythonhosted.org/packages/ef/41/f23c47a8f11f71e332a3a99ed8cef808a80d0837463d47df37aefee36f3b/time_machine-3.3.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:2dd459f5e828b40570000a8194071884cf9ddc8e8b620836c19a29babe1db94d", size = 48424, upload-time = "2026-07-31T22:02:36.472Z" },
++    { url = "https://files.pythonhosted.org/packages/9f/75/888a029fbe6ca04c68a4a07d7e7ea1fe6d0d9edec99fe8e7610e39f4bb0f/time_machine-3.3.0-cp314-cp314-win_amd64.whl", hash = "sha256:f36657c482394ef7d1919bf6251e5c9d82c576a606b2cb46f14039eec2ccc725", size = 21378, upload-time = "2026-07-31T22:02:37.493Z" },
++    { url = "https://files.pythonhosted.org/packages/94/b4/4814eacfa2044377ee872c1285905af0f66c69ed05c6d463166d2c78d3ad/time_machine-3.3.0-cp314-cp314-win_arm64.whl", hash = "sha256:e8f2de23a8da2cff2c31e0fb707b26f644f45091be13b23047801ff20a2e4f2a", size = 20455, upload-time = "2026-07-31T22:02:38.433Z" },
++    { url = "https://files.pythonhosted.org/packages/f6/2d/fa8abd3603483b1ece9914bb0c6caeec9b15146912f1a977c7cfbb8c83cd/time_machine-3.3.0-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:9f75f5124c38eb4a4fd4057e5a12fcb89683f2c6af6669132dd0d6c12e5f47ff", size = 19689, upload-time = "2026-07-31T22:02:39.562Z" },
++    { url = "https://files.pythonhosted.org/packages/ba/a3/738491cfa13f8585f478773769d60d91c6b01101dd650c764d528b9b5a01/time_machine-3.3.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:cbf8f607bdf7fcdbe89fb83c17d1645e9d8c892328012f605c683176f23e428f", size = 19921, upload-time = "2026-07-31T22:02:40.595Z" },
++    { url = "https://files.pythonhosted.org/packages/54/f6/a1e3112051518d9405d4b2e62ba537d0c4b9ecc823e466653a9ebf978a4a/time_machine-3.3.0-cp314-cp314t-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:9d551b4278954d6c404bc3cf87f3f5571e6fc0ba566d78b4244aa9811bb8ce92", size = 57380, upload-time = "2026-07-31T22:02:41.717Z" },
++    { url = "https://files.pythonhosted.org/packages/1d/93/7aa7a8654740bd77e7d0066f4ec40a5a2d36d17db7c4055449fd9043a025/time_machine-3.3.0-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:87b57d266bb2052267b4aaff021ec36a99f035591ac9de55dc1c6a029dc0d8a1", size = 59776, upload-time = "2026-07-31T22:02:42.918Z" },
++    { url = "https://files.pythonhosted.org/packages/e3/f5/e2bc6a10c6d77bc1cf0d363cd4e5c2eb9e1f3450cceeff67b8228b132ded/time_machine-3.3.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:25eb112e59dfd896909f7d07aa93782b65d7da03697066df0c118d2b63895bc4", size = 57962, upload-time = "2026-07-31T22:02:43.918Z" },
++    { url = "https://files.pythonhosted.org/packages/a7/7e/31b80ec2049d2151302ec7aa16e0e9c7a9a74480873c154194dd200931a1/time_machine-3.3.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:65d62ff1ebf5de1375bd5d4bae8da0e64ccbd05d555f44754416c43deab2ada6", size = 56200, upload-time = "2026-07-31T22:02:44.991Z" },
++    { url = "https://files.pythonhosted.org/packages/3c/2e/ae9c612b0f8ad1e5fa1136aeab333e40c63bb859c39bfea9e88976a71cfb/time_machine-3.3.0-cp314-cp314t-win_amd64.whl", hash = "sha256:9db01d04c31f94aae42a808f6fa863a0921783fc50a88bfd23de828a559bce80", size = 22305, upload-time = "2026-07-31T22:02:46.006Z" },
++    { url = "https://files.pythonhosted.org/packages/56/40/d6f73d9341e041be2894a5a07734fc48caa440fa7f3388216e29f5b655c7/time_machine-3.3.0-cp314-cp314t-win_arm64.whl", hash = "sha256:f65863fe410ce133071a1bcd8c185bbc3e670b1ade0c9a0f5d2779d6e4fd8b0c", size = 20617, upload-time = "2026-07-31T22:02:47.118Z" },
++]
++
+ [[package]]
+ name = "tinycss2"
+ version = "1.4.0"

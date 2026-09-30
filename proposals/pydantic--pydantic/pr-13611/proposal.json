@@ -1,0 +1,104 @@
+{
+ "base_sha": "796b6d855013692b5723baa2bdcc21ff5c2e2bee",
+ "base_verified": true,
+ "commits": 3,
+ "evidence": {
+  "discussion": [
+   {
+    "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **not alter performance**\n\n\n`\u2705 216` untouched benchmarks  \n`\u23e9 163` skipped benchmarks[^skipped]  \n\n\n\n\n\n---\n\n<sub>Comparing <code>soma0212:pipeline-pattern-flags</code> (cb25f56) with <code>main</code> (796b6d8)</sub>\n\n<a href=\"https://app.codspeed.io/pydantic/pydantic/branches/soma0212%3Apipeline-pattern-flags?utm_source=github&utm_medium=comment-v2&utm_content=button\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://codspeed.io/pr-report/open-in-codspeed-dark.svg\">\n    <source media=\"(prefers [...]",
+    "created_at": "2026-08-09T08:10:08Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#issuecomment-5230514523"
+   },
+   {
+    "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.89%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"80% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-80%25-orange.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\"6\">&nbs [...]",
+    "created_at": "2026-08-09T08:11:48Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#issuecomment-5230520995"
+   }
+  ],
+  "later_references": [],
+  "linked_issues": [],
+  "review_comments": [
+   {
+    "body": "```suggestion\n```",
+    "line": 658,
+    "path": "pydantic/experimental/pipeline.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#discussion_r3747171293"
+   },
+   {
+    "body": "```suggestion\n```",
+    "line": 35,
+    "path": "tests/test_pipeline.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#discussion_r3747174037"
+   },
+   {
+    "body": "```suggestion\n```",
+    "line": 47,
+    "path": "tests/test_pipeline.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#discussion_r3747175053"
+   },
+   {
+    "body": "```suggestion\n```",
+    "line": 39,
+    "path": "tests/test_pipeline.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#discussion_r3747176318"
+   },
+   {
+    "body": "```suggestion\n\n\n```",
+    "line": 41,
+    "path": "tests/test_pipeline.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#discussion_r3747179355"
+   }
+  ],
+  "reviews": [
+   {
+    "body": "",
+    "state": "CHANGES_REQUESTED",
+    "submitted_at": "2026-08-10T06:39:58Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#pullrequestreview-4894238965"
+   },
+   {
+    "body": "",
+    "state": "APPROVED",
+    "submitted_at": "2026-08-10T06:41:32Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13611#pullrequestreview-4894253153"
+   }
+  ]
+ },
+ "excluded_files": [],
+ "files": [
+  "pydantic/experimental/pipeline.py",
+  "tests/test_pipeline.py"
+ ],
+ "has_tests": true,
+ "merge_sha": "1affc1996d2bfa548707d11fef657955bf562aa5",
+ "merge_style": "squash",
+ "merged_at": "2026-08-10T06:55:13Z",
+ "packet": {
+  "acceptance_draft": [],
+  "body_excerpt": "in `_apply_constraint`, a compiled `Pattern` constraint on a string schema was folded in as `s['pattern'] = constraint.pattern`, which keeps only the source string and drops the `re` flags. pydantic-core's regex defaults are not python's (`\\w`/`\\d`/`\\b` are unicode-mode), so a pattern built with `re.ASCII` stops being ascii-only: `validate_as(str).constrain(re.compile(r'^\\w+$', re.ASCII))` lets a cyrillic `\u0430dmin` through, and `re.IGNORECASE` gets dropped the other way and rejects valid input. the string schema already accepts a compiled pattern and honors its flags, which is how `StringConstraints` passes one through, so this hands `constraint` over instead of its source. flag-free patterns (including `str_pattern`) fold identically to before; the regression test pins the re.ASCII and re.IGNORECASE cases.",
+  "objective": "Preserve `re.Pattern` instance for compiled patterns in the experimental pipeline"
+ },
+ "pr": 13611,
+ "repo": "https://github.com/pydantic/pydantic",
+ "ruling": {
+  "acceptance": [
+   "A constraint built from a compiled pattern honours its flags such as re.ASCII and re.IGNORECASE",
+   "Constraints built from pattern strings behave as before"
+  ],
+  "case_id": "pydantic-pr13611-pipeline-keeps-compiled-pattern",
+  "expected": [],
+  "objective": "Keep the compiled re.Pattern, with its flags, when a pattern constraint is applied in the experimental pipeline",
+  "rationale": "Passes the compiled pattern through instead of its source string; tests cover re.ASCII and re.IGNORECASE; changes requested and then approved. Nothing referenced it afterwards.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "clean"
+ },
+ "schema": 1,
+ "title": "Preserve `re.Pattern` instance for compiled patterns in the experimental pipeline",
+ "urls": {
+  "base_commit": "https://github.com/pydantic/pydantic/commit/796b6d855013692b5723baa2bdcc21ff5c2e2bee",
+  "compare": "https://github.com/pydantic/pydantic/compare/796b6d855013692b5723baa2bdcc21ff5c2e2bee...1affc1996d2bfa548707d11fef657955bf562aa5",
+  "merge_commit": "https://github.com/pydantic/pydantic/commit/1affc1996d2bfa548707d11fef657955bf562aa5",
+  "pr": "https://github.com/pydantic/pydantic/pull/13611"
+ }
+}

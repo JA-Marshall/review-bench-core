@@ -1,0 +1,52 @@
+diff --git a/pydantic/_internal/_typing_extra.py b/pydantic/_internal/_typing_extra.py
+index ab6a1397c..d68c792af 100644
+--- a/pydantic/_internal/_typing_extra.py
++++ b/pydantic/_internal/_typing_extra.py
+@@ -294,7 +294,10 @@ def safe_get_annotations(obj: Any) -> dict[str, Any]:
+     if sys.version_info >= (3, 14):
+         return annotationlib.get_annotations(obj, format=annotationlib.Format.FORWARDREF)
+     else:
+-        return getattr(obj, '__annotations__', {})
++        if isinstance(obj, type):
++            return obj.__dict__.get('__annotations__', {})
++        else:
++            return getattr(obj, '__annotations__', {})
+ 
+ 
+ def get_model_type_hints(
+diff --git a/tests/test_edge_cases.py b/tests/test_edge_cases.py
+index 3e8e38e7d..df52288cc 100644
+--- a/tests/test_edge_cases.py
++++ b/tests/test_edge_cases.py
+@@ -51,6 +51,7 @@ from pydantic import (
+     validator,
+ )
+ from pydantic._internal._model_construction import ModelMetaclass
++from pydantic._internal._typing_extra import safe_get_annotations
+ from pydantic.fields import Field, computed_field
+ from pydantic.functional_serializers import (
+     field_serializer,
+@@ -3161,3 +3162,23 @@ def test_model_fields_set_includes_extra_after_assignment():
+     m.extra_after_init = 3
+     assert m.model_fields_set == {'field', 'extra_at_init', 'extra_after_init'}
+     assert m.model_extra == {'extra_at_init': 2, 'extra_after_init': 3}
++
++
++def test_safe_get_annotations_from_dict() -> None:
++    """https://github.com/pydantic/pydantic/issues/13520"""
++
++    class Meta(type):
++        pass
++
++    Meta.__annotations__
++
++    class Base(metaclass=Meta):
++        pass
++
++    class Main(Base):
++        f: int
++
++    class Sub(Main):
++        pass
++
++    assert safe_get_annotations(Sub) == {}

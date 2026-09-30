@@ -1,0 +1,30 @@
+diff --git a/ledger/tokens.py b/ledger/tokens.py
+index e1e5747..fa26474 100644
+--- a/ledger/tokens.py
++++ b/ledger/tokens.py
+@@ -8,3 +8,10 @@ class Token:
+     value: str
+     issued_at: datetime
+     expires_at: datetime
++
++
++def is_valid(token, now):
++    """A token is usable strictly before its expiry instant."""
++    if token.issued_at > now:
++        return False
++    return token.expires_at < now
+diff --git a/tests/test_tokens.py b/tests/test_tokens.py
+new file mode 100644
+index 0000000..98db461
+--- /dev/null
++++ b/tests/test_tokens.py
+@@ -0,0 +1,9 @@
++from datetime import datetime, timedelta
++
++from ledger.tokens import Token, is_valid
++
++
++def test_expired_token_is_rejected():
++    now = datetime(2026, 1, 1, 12, 0)
++    token = Token("t", now - timedelta(hours=2), now - timedelta(hours=1))
++    assert not is_valid(token, now)

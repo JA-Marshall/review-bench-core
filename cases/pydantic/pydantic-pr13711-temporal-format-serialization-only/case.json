@@ -1,0 +1,41 @@
+{
+ "acceptance": [
+  "Validation-mode schemas for date, time, datetime and timedelta are string schemas regardless of the temporal configuration",
+  "Serialization-mode schemas still reflect the configured format"
+ ],
+ "author": "history",
+ "base_sha": "952c239fadf1f64e5d29cbf15d1696548d8ac53c",
+ "expected": [
+  {
+   "description": "A temporal field with a default gets a serialized numeric default while the validation schema now declares the field a string.",
+   "file": "pydantic/json_schema.py",
+   "id": "numeric-default-under-string-type",
+   "keywords": [
+    "default",
+    "numeric default",
+    "contradict",
+    "serialized default",
+    "default_schema",
+    "'number'",
+    "under type"
+   ],
+   "severity": "should_fix"
+  }
+ ],
+ "files": [
+  "pydantic/json_schema.py",
+  "tests/test_json_schema.py"
+ ],
+ "id": "pydantic-pr13711-temporal-format-serialization-only",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Apply ser_json_temporal and ser_json_timedelta formats only to serialization-mode JSON schemas; validation schemas keep the ISO 8601 string form",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "d6e2021f761fc6bd53bd955a9cc3916cc5d0bfe6",
+  "merge_style": "squash",
+  "merged_at": "2026-08-26T11:05:15Z",
+  "pr": 13711,
+  "url": "https://github.com/pydantic/pydantic/pull/13711"
+ }
+}

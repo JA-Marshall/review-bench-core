@@ -1,0 +1,101 @@
+{
+ "base_sha": "5aa850687b969e7c0526f9ecedab94d88b3e1a07",
+ "base_verified": true,
+ "commits": 1,
+ "evidence": {
+  "discussion": [
+   {
+    "body": "## Deploying with &nbsp;<a href=\"https://pages.dev\"><img alt=\"Cloudflare Pages\" src=\"https://user-images.githubusercontent.com/23264/106598434-9e719e00-654f-11eb-9e59-6167043cfa01.png\" width=\"16\"></a> &nbsp;Cloudflare Pages\n\n<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>8b01b96</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;\u2705&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://20657490.pydantic-docs2.pages.dev'>https://20657490.pydantic-docs2.pages.dev</a>\n</td></tr>\n<tr><td><strong>Branch Preview URL:</strong></ [...]",
+    "created_at": "2023-07-04T09:05:08Z",
+    "url": "https://github.com/pydantic/pydantic/pull/6414#issuecomment-1619847378"
+   },
+   {
+    "body": "please review",
+    "created_at": "2023-07-04T09:48:22Z",
+    "url": "https://github.com/pydantic/pydantic/pull/6414#issuecomment-1619920338"
+   },
+   {
+    "body": "I tested this using \n  `pip install --force-reinstall git+https://github.com/pydantic/pydantic@fix/hash-json-schema-types` \nand it fixes my issue from https://github.com/pydantic/pydantic/discussions/6412 :+1:.",
+    "created_at": "2023-07-04T11:34:32Z",
+    "url": "https://github.com/pydantic/pydantic/pull/6414#issuecomment-1620080432"
+   }
+  ],
+  "later_references": [
+   {
+    "body": "### Initial Checks\n\n- [X] I confirm that I'm using Pydantic V2\n\n### Description\n\nI'm unable to generate a JSON schema for my model, which uses a PlainValidator to validate a custom bool type that can also be unset.\n\nI believe I'm seeing the behaviour from [here](https://github.com/pydantic/pydantic/discussions/6412), but I don't understand it well so I'm not sure. (It's the only hit for a Google search of my exact error).  \n\nThe discussion of the past error led to a [fix](https://github.com/pydantic/pydantic/pull/6414), with a note that it would be released back on July 4.  I'm using pydantic  [...]",
+    "kind": "issue",
+    "number": 7273,
+    "referenced_at": "2023-08-28T22:05:37Z",
+    "state": "closed",
+    "title": "PydanticInvalidForJsonSchema: Cannot generate a JsonSchema for core_schema.PlainValidatorFunctionSchema",
+    "url": "https://github.com/pydantic/pydantic/issues/7273"
+   }
+  ],
+  "linked_issues": [],
+  "review_comments": [],
+  "reviews": [
+   {
+    "body": "",
+    "state": "APPROVED",
+    "submitted_at": "2023-07-04T11:43:17Z",
+    "url": "https://github.com/pydantic/pydantic/pull/6414#pullrequestreview-1512713886"
+   }
+  ]
+ },
+ "excluded_files": [],
+ "files": [
+  "pydantic/json_schema.py",
+  "tests/test_json_schema.py"
+ ],
+ "has_tests": true,
+ "merge_sha": "b095cd4a9fa1d9ad8549580cd0b4ccd9d36e96ef",
+ "merge_style": "squash",
+ "merged_at": "2023-07-04T13:05:01Z",
+ "packet": {
+  "acceptance_draft": [
+   "Closes https://github.com/pydantic/pydantic/discussions/6412"
+  ],
+  "body_excerpt": "- Closes https://github.com/pydantic/pydantic/discussions/6412\n\nSelected Reviewer: @adriangb",
+  "objective": "\ud83d\udc1b Add `__hash__` for `WithJsonSchema` and `Examples`"
+ },
+ "pr": 6414,
+ "repo": "https://github.com/pydantic/pydantic",
+ "ruling": {
+  "acceptance": [
+   "Annotated[int, WithJsonSchema(...)] inside a Union generates a JSON schema without a hashability error",
+   "Equal instances hash equal"
+  ],
+  "case_id": "pydantic-pr6414-hashable-json-schema-metadata",
+  "expected": [
+   {
+    "description": "__hash__ returns hash(type(self.mode)), the hash of str or NoneType, so all instances with a string mode share one hash value; valid but degenerate.",
+    "file": "pydantic/json_schema.py",
+    "id": "hash-of-mode-type",
+    "keywords": [
+     "hash(type",
+     "type(self.mode)",
+     "self.mode",
+     "constant",
+     "same hash",
+     "collide",
+     "type rather than",
+     "hash the value"
+    ],
+    "severity": "should_fix"
+   }
+  ],
+  "objective": "Make WithJsonSchema and Examples hashable so they can be used as Annotated metadata inside Union and Optional",
+  "rationale": "PR #13428 (2026) corrected __hash__ to hash the mode value: as written it hashes type(self.mode), so every instance shares one of two hash values. Equal objects still hash equal, so the hash contract holds and no concrete failure follows; that makes it should_fix, not blocking, and the case stays clean. Merged in 2023, so it is in every model's training data.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "clean"
+ },
+ "schema": 1,
+ "title": "\ud83d\udc1b Add `__hash__` for `WithJsonSchema` and `Examples`",
+ "urls": {
+  "base_commit": "https://github.com/pydantic/pydantic/commit/5aa850687b969e7c0526f9ecedab94d88b3e1a07",
+  "compare": "https://github.com/pydantic/pydantic/compare/5aa850687b969e7c0526f9ecedab94d88b3e1a07...b095cd4a9fa1d9ad8549580cd0b4ccd9d36e96ef",
+  "merge_commit": "https://github.com/pydantic/pydantic/commit/b095cd4a9fa1d9ad8549580cd0b4ccd9d36e96ef",
+  "pr": "https://github.com/pydantic/pydantic/pull/6414"
+ }
+}

@@ -1,0 +1,29 @@
+diff --git a/ledger/money.py b/ledger/money.py
+index 8642c9c..3de8804 100644
+--- a/ledger/money.py
++++ b/ledger/money.py
+@@ -12,3 +12,11 @@ def line_total(unit_price, quantity):
+     if quantity < 0:
+         raise ValueError("quantity must not be negative")
+     return to_pennies(Decimal(unit_price) * quantity)
++
++
++def apply_discount(total, percent):
++    """Reduce a line total by a whole-number percentage, rounded to the penny."""
++    if not 0 <= percent <= 100:
++        raise ValueError("percent must be between 0 and 100")
++    factor = (Decimal(100) - Decimal(percent)) / Decimal(100)
++    return to_pennies(Decimal(total) * factor)
+diff --git a/tests/test_money.py b/tests/test_money.py
+index 2be7cd6..d2e9802 100644
+--- a/tests/test_money.py
++++ b/tests/test_money.py
+@@ -5,3 +5,8 @@ from ledger.money import line_total
+ 
+ def test_line_total_rounds_to_pennies():
+     assert line_total("1.005", 1) == Decimal("1.01")
++
++
++def test_discount_rounds_to_pennies():
++    from ledger.money import apply_discount
++    assert apply_discount("19.99", 15) == Decimal("16.99")

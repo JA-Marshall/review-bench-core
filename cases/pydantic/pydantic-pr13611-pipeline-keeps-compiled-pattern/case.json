@@ -1,0 +1,25 @@
+{
+ "acceptance": [
+  "A constraint built from a compiled pattern honours its flags such as re.ASCII and re.IGNORECASE",
+  "Constraints built from pattern strings behave as before"
+ ],
+ "author": "history",
+ "base_sha": "796b6d855013692b5723baa2bdcc21ff5c2e2bee",
+ "expected": [],
+ "files": [
+  "pydantic/experimental/pipeline.py",
+  "tests/test_pipeline.py"
+ ],
+ "id": "pydantic-pr13611-pipeline-keeps-compiled-pattern",
+ "kind": "clean",
+ "notes": "Ruled clean by assistant draft (Claude), pending review by JA-Marshall on 2026-09-30; see provenance.json.",
+ "objective": "Keep the compiled re.Pattern, with its flags, when a pattern constraint is applied in the experimental pipeline",
+ "repo": "https://github.com/pydantic/pydantic",
+ "source": {
+  "merge": "1affc1996d2bfa548707d11fef657955bf562aa5",
+  "merge_style": "squash",
+  "merged_at": "2026-08-10T06:55:13Z",
+  "pr": 13611,
+  "url": "https://github.com/pydantic/pydantic/pull/13611"
+ }
+}

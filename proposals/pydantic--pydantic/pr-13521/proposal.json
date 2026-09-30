@@ -1,0 +1,123 @@
+{
+ "base_sha": "a187a65467a588ccc00761d80f325b45381ca819",
+ "base_verified": true,
+ "commits": 1,
+ "evidence": {
+  "discussion": [
+   {
+    "body": "## Deploying pydantic-docs with &nbsp;<a href=\"https://pages.dev\"><img alt=\"Cloudflare Pages\" src=\"https://user-images.githubusercontent.com/23264/106598434-9e719e00-654f-11eb-9e59-6167043cfa01.png\" width=\"16\"></a> &nbsp;Cloudflare Pages\n\n<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>a2decd3</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;\u2705&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://508eb4c8.pydantic-docs.pages.dev'>https://508eb4c8.pydantic-docs.pages.dev</a>\n</td></tr>\n<tr><td><strong>Branch Preview URL [...]",
+    "created_at": "2026-07-27T17:00:52Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13521#issuecomment-5094301828"
+   },
+   {
+    "body": "<!-- __CODSPEED_PERFORMANCE_REPORT_COMMENT__ -->\n## Merging this PR will **not alter performance**\n\n\n`\u2705 215` untouched benchmarks  \n\n\n\n\n\n---\n\n<sub>Comparing <code>vp/safe-get-annotations-fix</code> (a2decd3) with <code>main</code> (a187a65)</sub>\n\n<a href=\"https://app.codspeed.io/pydantic/pydantic/branches/vp%2Fsafe-get-annotations-fix?utm_source=github&utm_medium=comment-v2&utm_content=button\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://codspeed.io/pr-report/open-in-codspeed-dark.svg\">\n    <source media=\"(prefers-color-scheme: light)\" srcset=\"https://codspeed [...]",
+    "created_at": "2026-07-27T17:08:14Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13521#issuecomment-5094377848"
+   },
+   {
+    "body": "## Coverage report\n\n\n<img title=\"Coverage for the whole project is 95.99%. Previous coverage rate is not available, cannot report on evolution.\" src=\"https://img.shields.io/badge/Coverage-95%25-orange.svg\"> <img title=\"100% of the statement lines added by this PR are covered\" src=\"https://img.shields.io/badge/PR%20Coverage-100%25-brightgreen.svg\"><details><summary>Click to see where and how coverage changed</summary><table><thead>\n  <tr><th>File</th><th>Statements</th><th>Missing</th><th>Coverage</th><th>Coverage<br>(new stmts)</th><th>Lines missing</th></tr>\n</thead>\n<tbody><tr>\n<td colspan=\" [...]",
+    "created_at": "2026-07-27T17:12:48Z",
+    "url": "https://github.com/pydantic/pydantic/pull/13521#issuecomment-5094421751"
+   }
+  ],
+  "later_references": [
+   {
+    "body": "Such test is failing with pydantic==2.14.0a1 \n\n```python\ndef test_empty_subclass():\n    class MyModel(EventedModel):\n        a: int = 1\n        b: str = \"default\"\n\n    class MyModel2(MyModel):\n        pass\n\n\n    m1 = MyModel()\n    assert m1.a == 1\n    assert m1.b == \"default\"\n\n    m2 = MyModel2()\n    assert m2.a == 1\n    assert m2.b == \"default\"\n``` \n\nwith:\n```\n\n    def __init__(_model_self_, **data: Any) -> None:\n>       super().__init__(**data)\nE       pydantic_core._pydantic_core.ValidationError: 2 validation errors for MyModel2\nE       a\nE         Field required [type=missing, input_value= [...]",
+    "kind": "issue",
+    "number": 417,
+    "referenced_at": "2026-09-10T15:11:56Z",
+    "state": "closed",
+    "title": "Pydantic 2.14.0a1 bug for empty subclass",
+    "url": "https://github.com/pyapp-kit/psygnal/issues/417"
+   },
+   {
+    "body": "Ensures annotation-free `EventedModel` subclasses keep inherited field defaults under Pydantic 2.14.\n\nFixes #417\n\nTests: 693 passed on Pydantic 2.13.5; 34 passed on 2.14.0a1. Ruff passes.",
+    "kind": "pull_request",
+    "number": 430,
+    "referenced_at": "2026-09-10T15:12:12Z",
+    "state": "closed",
+    "title": "fix: preserve defaults in empty model subclasses",
+    "url": "https://github.com/pyapp-kit/psygnal/pull/430"
+   }
+  ],
+  "linked_issues": [
+   {
+    "body": "Implemented what we discussed in #120\n\nAlso changed pytest execution in the Makefile (was failing in my machine).",
+    "created_at": "2018-02-02T11:39:52Z",
+    "number": 123,
+    "title": "Subclass abcmeta",
+    "url": "https://github.com/pydantic/pydantic/pull/123"
+   },
+   {
+    "body": "### Initial Checks\n\n- [x] I confirm that I'm using Pydantic V2\n\n### Description\n\nThis is a regression on `main` (`2.14.0a1`); I could not reproduce it on any released version (checked 2.13.4 and 2.10.6 under the same conditions). It affects Python 3.10\u20133.13 (verified on 3.10, 3.12 and 3.13); Python 3.14 is unaffected.\n\nIf `__annotations__` has ever been **read** on a metaclass appearing in a model's metatype MRO (e.g. `ModelMetaclass` itself, or `abc.ABCMeta`), then any generic model parametrized **for the first time afterwards** gets a broken schema:\n\n- type variables are not substituted (`x: T` ends up with an `any` schema), and\n- field defaults are dropped (fields with defaults become required).\n\nParametrizations built *before* the read keep working, since their schemas are already cached \u2014 which makes this very order-dependent and confusing to track down in a real test suite.\n\nReading an attribute sounds like an odd trigger, but it happens in the wild: on CPython \u2264 3.13, reading `__annotations__` on a (heap) class that has none **auto-creates a plain `__annotations__ = {}` entry in that class's `__dict__`** (see the [annotations HOWTO](https://docs.python.org/3/howto/annotations.html)). `langgraph` does such a read at import time (`get_cached_annotated_keys` in `langgraph/_internal/_fields.py` has a `getattr(base, \"__annotations__\", None)` fallback \u2014 added for Python 3.14 compat, ironically \u2014 which ends up planting `{}` on `abc.ABCMeta`). So a plain `import langgraph.preb [...]",
+    "created_at": "2026-07-27T16:25:58Z",
+    "number": 13520,
+    "title": "Generic model parametrization drops field defaults and typevar substitution after `__annotations__` is read on a metaclass (Python <= 3.13)",
+    "url": "https://github.com/pydantic/pydantic/issues/13520"
+   }
+  ],
+  "review_comments": [
+   {
+    "body": "this seems like it would pass without the change in the other file, and doesn't seem to demonstrate that the failure in the issue can't happen",
+    "line": 3184,
+    "path": "tests/test_edge_cases.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13521#discussion_r3660959759"
+   },
+   {
+    "body": "> this seems like it would pass without the change in the other file\n\nWhat makes you say this? It does fail without the fix.\n\nI didn't do a full reproduction with the `BaseModel`'s metaclass because it would result in a theoretical test pollution, as `type(BaseModel)` would then have `__annotations__` in its `__dict__`.",
+    "line": 3184,
+    "path": "tests/test_edge_cases.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13521#discussion_r3663357419"
+   },
+   {
+    "body": "> I didn't do a full reproduction with the `BaseModel`'s metaclass because it would result in a theoretical test pollution, as `type(BaseModel)` would then have `__annotations__` in its `__dict__`.\n\nBut shouldn't we be sure that this doesn't cause problems? And you could remove it from the dict after",
+    "line": 3184,
+    "path": "tests/test_edge_cases.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13521#discussion_r3665185073"
+   },
+   {
+    "body": "> What makes you say this? It does fail without the fix.\n\nmy mistake, at a glance it looked like both branches of safe_get_annotations would return {}",
+    "line": 3184,
+    "path": "tests/test_edge_cases.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13521#discussion_r3665191805"
+   },
+   {
+    "body": "> And you could remove it from the dict after\n\n`__dict__` of types are immutable (they are `mappingproxy` instances)",
+    "line": 3184,
+    "path": "tests/test_edge_cases.py",
+    "url": "https://github.com/pydantic/pydantic/pull/13521#discussion_r3665209118"
+   }
+  ],
+  "reviews": []
+ },
+ "excluded_files": [],
+ "files": [
+  "pydantic/_internal/_typing_extra.py",
+  "tests/test_edge_cases.py"
+ ],
+ "has_tests": true,
+ "merge_sha": "05bc5da8b40540eee8491ec5e81622b36f7db12f",
+ "merge_style": "squash",
+ "merged_at": "2026-07-27T20:43:51Z",
+ "packet": {
+  "acceptance_draft": [],
+  "body_excerpt": "<!-- Thank you for your contribution! -->\n<!-- Unless your change is trivial, please create an issue to discuss the change before creating a PR -->\n\n## Change Summary\n\nFixes https://github.com/pydantic/pydantic/issues/13520. Regression in https://github.com/pydantic/pydantic/pull/13070.\n\n<!-- Please give a short summary of the changes. -->\n\n## Related issue number\n\n<!-- WARNING: please use \"fix #123\" style references so the issue is closed when this PR is merged. -->\n\n## Checklist\n\n* [ ] The pull request title is a good summary of the changes - it will be used in the changelog\n* [ ] Unit tests for the changes exist\n* [ ] Tests pass on CI\n* [ ] Documentation reflects the changes where applicable\n* [ ] My PR is ready to review, **please add a comment including the phrase \"please review\" to assign reviewers**",
+  "objective": "Fix access of annotations in `safe_get_annotations()` in Python <= 3.13"
+ },
+ "pr": 13521,
+ "repo": "https://github.com/pydantic/pydantic",
+ "ruling": {
+  "rationale": "The only later references are a downstream project (psygnal) hitting a behaviour change in 2.14.0a1 with annotation-free subclasses and working around it on their side. Whether pydantic treats that as a regression is not established, so on this evidence the case is neither clean nor seeded.",
+  "ruled_at": "2026-09-30",
+  "ruled_by": "assistant draft (Claude), pending review by JA-Marshall",
+  "status": "rejected"
+ },
+ "schema": 1,
+ "title": "Fix access of annotations in `safe_get_annotations()` in Python <= 3.13",
+ "urls": {
+  "base_commit": "https://github.com/pydantic/pydantic/commit/a187a65467a588ccc00761d80f325b45381ca819",
+  "compare": "https://github.com/pydantic/pydantic/compare/a187a65467a588ccc00761d80f325b45381ca819...05bc5da8b40540eee8491ec5e81622b36f7db12f",
+  "merge_commit": "https://github.com/pydantic/pydantic/commit/05bc5da8b40540eee8491ec5e81622b36f7db12f",
+  "pr": "https://github.com/pydantic/pydantic/pull/13521"
+ }
+}

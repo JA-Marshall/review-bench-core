@@ -1,0 +1,10 @@
+diff --git a/ledger/money.py b/ledger/money.py
+index 3de8804..73ce4a6 100644
+--- a/ledger/money.py
++++ b/ledger/money.py
+@@ -19,4 +19,4 @@ def apply_discount(total, percent):
+     if not 0 <= percent <= 100:
+         raise ValueError("percent must be between 0 and 100")
+     factor = (Decimal(100) - Decimal(percent)) / Decimal(100)
+-    return to_pennies(Decimal(total) * factor)
++    return round(float(total) * float(factor), 2)
